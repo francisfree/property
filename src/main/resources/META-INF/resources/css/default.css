@@ -1,0 +1,31 @@
+html {
+    font-size: 0.7em;
+}
+
+html .ui-fileupload-content .ui-progressbar {
+    width: 60px;
+    height: 10px;
+    margin: 0;
+    top: 5px;
+}
+html .ui.icon {
+    width: 18px;
+    height: 18px;
+}
+
+html .custom-panelgrid .ui-panelgrid-cell {
+    display: flex;
+    justify-content: center; /* Horizontally center */
+    align-items: center; /* Vertically center */
+    padding: 10px; /* Optional: Add padding for spacing */
+    text-align: center; /* Center text alignment */
+    white-space: nowrap; /* Prevent word wrapping if needed */
+}
+
+html .justify-content-between {
+    justify-content: space-between !important
+}
+
+html .align-items-center {
+    align-items: center !important
+}

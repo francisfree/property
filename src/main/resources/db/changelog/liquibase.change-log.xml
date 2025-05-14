@@ -1,0 +1,134 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext
+   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+   http://www.liquibase.org/xml/ns/dbchangelog
+   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="202250401 10:00" author="francis">
+        <preConditions>
+            <not>
+                <tableExists tableName="properties"/>
+            </not>
+        </preConditions>
+        <createTable tableName="properties">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="public_id" type="uuid"/>
+            <column name="date_created" type="timestamp"/>
+            <column name="date_modified" type="timestamp"/>
+            <column name="created_by" type="varchar(250)"/>
+            <column name="modified_by" type="varchar(250)"/>
+            <column name="deleted" type="boolean" defaultValueBoolean="false"/>
+            <column name="name" type="varchar(250)"/>
+            <column name="location" type="varchar(250)"/>
+            <column name="area" type="varchar(250)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="202250401 10:01" author="francis">
+        <preConditions>
+            <not>
+                <tableExists tableName="houses"/>
+            </not>
+        </preConditions>
+        <createTable tableName="houses">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="public_id" type="uuid"/>
+            <column name="date_created" type="timestamp"/>
+            <column name="date_modified" type="timestamp"/>
+            <column name="created_by" type="varchar(250)"/>
+            <column name="modified_by" type="varchar(250)"/>
+            <column name="deleted" type="boolean" defaultValueBoolean="false"/>
+            <column name="house_number" type="varchar(250)"/>
+            <column name="floor" type="varchar(250)"/>
+            <column name="property_id" type="bigint">
+                <constraints foreignKeyName="fk_property_id" referencedTableName="properties" referencedColumnNames="id"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="202250401 10:02" author="francis">
+        <preConditions>
+            <not>
+                <tableExists tableName="persons"/>
+            </not>
+        </preConditions>
+        <createTable tableName="persons">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="public_id" type="uuid"/>
+            <column name="date_created" type="timestamp"/>
+            <column name="date_modified" type="timestamp"/>
+            <column name="created_by" type="varchar(250)"/>
+            <column name="modified_by" type="varchar(250)"/>
+            <column name="deleted" type="boolean" defaultValueBoolean="false"/>
+            <column name="first_name" type="varchar(250)"/>
+            <column name="last_name" type="varchar(250)"/>
+            <column name="other_name" type="varchar(250)"/>
+            <column name="identification_number" type="varchar(250)"/>
+            <column name="identification_type" type="varchar(250)"/>
+            <column name="nationality" type="varchar(250)"/>
+            <column name="phone_number" type="varchar(250)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="202250401 10:03" author="francis">
+        <preConditions>
+            <not>
+                <tableExists tableName="rentals"/>
+            </not>
+        </preConditions>
+        <createTable tableName="rentals">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="public_id" type="uuid"/>
+            <column name="date_created" type="timestamp"/>
+            <column name="date_modified" type="timestamp"/>
+            <column name="created_by" type="varchar(250)"/>
+            <column name="modified_by" type="varchar(250)"/>
+            <column name="deleted" type="boolean" defaultValueBoolean="false"/>
+            <column name="amount" type="numeric(11,2)"/>
+            <column name="person_id" type="bigint">
+                <constraints foreignKeyName="fk_person_id" referencedTableName="persons" referencedColumnNames="id"/>
+            </column>
+            <column name="house_id" type="bigint">
+                <constraints foreignKeyName="fk_house_id" referencedTableName="houses" referencedColumnNames="id"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="202250401 10:04" author="francis">
+        <preConditions>
+            <not>
+                <tableExists tableName="rental_payments"/>
+            </not>
+        </preConditions>
+        <createTable tableName="rental_payments">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="public_id" type="uuid"/>
+            <column name="date_created" type="timestamp"/>
+            <column name="date_modified" type="timestamp"/>
+            <column name="created_by" type="varchar(250)"/>
+            <column name="modified_by" type="varchar(250)"/>
+            <column name="deleted" type="boolean" defaultValueBoolean="false"/>
+            <column name="rental_id" type="bigint">
+                <constraints foreignKeyName="fk_rental_id" referencedTableName="rentals" referencedColumnNames="id"/>
+            </column>
+            <column name="amount" type="numeric(11,2)"/>
+            <column name="payment_date" type="date"/>
+            <column name="payment_mode" type="varchar(250)"/>
+            <column name="payment_message" type="varchar(500)"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

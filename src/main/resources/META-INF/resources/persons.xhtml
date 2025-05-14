@@ -1,0 +1,125 @@
+<?xml version="1.0"  encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:pe="http://primefaces.org/ui/extensions"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<ui:composition template="templates/mainLayout.xhtml">
+    <ui:define name="centerContent">
+        <h:form id="dataForm">
+            <p:growl>
+                <p:autoUpdate/>
+            </p:growl>
+            <div class="card">
+                <p:dialog id="editDlg" header="Edit Person" widgetVar="dlg3" minHeight="40" width="350" showEffect="fade" focus="btnSave" closeOnEscape="true">
+                    <h:panelGrid columns="3" cellpadding="7">
+                        <p:outputLabel for="@next" value="First Name"/>
+                        <p:inputText value="#{personView.personRequest.firstName}" label="First Name"/>
+                        <p:message for="@previous"/>
+
+                        <p:outputLabel for="@next" value="Surname"/>
+                        <p:inputText value="#{personView.personRequest.lastName}" label="Surname" />
+                        <p:message for="@previous"/>
+
+                        <p:outputLabel for="@next" value="Other Names"/>
+                        <p:inputText value="#{personView.personRequest.otherName}" label="Other Names"/>
+                        <p:message for="@previous"/>
+
+                        <p:outputLabel for="@next" value="Identification Type"/>
+                        <p:selectOneMenu value="#{personView.personRequest.identificationType}">
+                            <f:selectItems value="#{personView.identificationTypes}" var="identificationType" itemValue="#{identificationType}" itemLabel="#{identificationType}"/>
+                        </p:selectOneMenu>
+                        <p:message for="@previous"/>
+
+                        <p:outputLabel for="@next" value="Identification Value"/>
+                        <p:inputText value="#{personView.personRequest.identificationNumber}" label="Identification Value"/>
+                        <p:message for="@previous"/>
+
+                        <p:outputLabel for="@next" value="Phone Number"/>
+                        <p:inputText value="#{personView.personRequest.phoneNumber}" label="Phone Number"/>
+                        <p:message for="@previous"/>
+
+                        <p:outputLabel for="@next" value="Nationality"/>
+                        <p:inputText value="#{personView.personRequest.nationality}" label="Nationality"/>
+                        <p:message for="@previous"/>
+
+                    </h:panelGrid>
+                    <f:facet name="footer">
+                        <p:commandButton type="button" value="Cancel" styleClass="ui-button-flat mr-2" style="width: 6rem" onclick="PF('dlg3').hide()"/>
+                        <p:commandButton id="btnSave" value="Save" style="width: 5rem" actionListener="#{personView.savePerson()}" update=":dataForm"/>
+                    </f:facet>
+                </p:dialog>
+                <p:dataTable id="personsTable" var="person" tableStyle="table-layout:auto"
+                             resizableColumns="true" resizeMode="expand" value="#{personView.persons}"
+                             rows="25" lazy="true" paginator="true" paginatorPosition="bottom"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             currentPageReportTemplate="{startRecord}-{endRecord} of {totalRecords} records"
+                             rowsPerPageTemplate="5,10,25,{ShowAll|'All'}"
+                             selection="#{personView.selectedPerson}" selectionMode="single">
+                    <f:facet name="header">
+                        <div class="flex justify-content-between align-items-center">
+                            Persons
+                            <h:panelGroup id="headerPanel">
+                                <p:outputLabel for="search" value="Search" style="padding-right: 5px;"/>
+                                <p:inputText id="search"  value="#{personView.searchParam}"
+                                              style="padding-right: 5px;"/>
+                                <p:commandButton value="Filter" actionListener="#{personView.filter()}"
+                                                 update="@form" style="padding-right: 5px;"/>
+                                <p:commandButton value="Clear" actionListener="#{personView.clear()}"
+                                                 update="@form" style="padding-right: 5px;"/>
+                                <p:commandButton id="editBtn" value="Edit" type="button" icon="pi pi-external-link" onclick="PF('dlg3').show()" rendered="#{personView.selectedPerson != null}"/>
+                                <p:commandButton id="toggler" type="button" value="Columns" icon="pi pi-align-justify"/>
+                                <p:columnToggler datasource="personsTable" trigger="toggler"/>
+                            </h:panelGroup>
+                        </div>
+                    </f:facet>
+
+                    <p:ajax event="rowSelect" listener="#{personView.onRowSelect}" update=":dataForm:personsTable:headerPanel :dataForm:editDlg"/>
+
+                    <p:column headerText="Id">
+                        <h:outputText value="#{person.id}"/>
+                    </p:column>
+
+                    <p:column headerText="Date">
+                        <h:outputText value="#{person.dateCreated}">
+                            <f:convertDateTime type="localDateTime" pattern="dd-MM-yyyy hh:mm:ss.SSS a"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="First Name">
+                        <h:outputText value="#{person.firstName}"/>
+                    </p:column>
+
+                    <p:column headerText="Last Name">
+                        <h:outputText value="#{person.lastName}"/>
+                    </p:column>
+
+                    <p:column headerText="Other Name">
+                        <h:outputText value="#{person.otherName}"/>
+                    </p:column>
+
+                    <p:column headerText="Phone Number">
+                        <h:outputText value="#{person.phoneNumber}"/>
+                    </p:column>
+
+                    <p:column headerText="Identification Type">
+                        <h:outputText value="#{person.identificationType}"/>
+                    </p:column>
+
+                    <p:column headerText="Identification Number">
+                        <h:outputText value="#{person.identificationNumber}"/>
+                    </p:column>
+
+                    <p:column headerText="Nationality">
+                        <h:outputText value="#{person.nationality}"/>
+                    </p:column>
+                </p:dataTable>
+            </div>
+        </h:form>
+    </ui:define>
+</ui:composition>
+
+</html>
