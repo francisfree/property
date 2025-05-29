@@ -3,6 +3,7 @@ package com.castle.property.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -24,4 +25,11 @@ public class Property extends AbstractAuditableActivityEntity {
 
     @Column(name = "area")
     private String area;
+
+    @Transient
+    private String description;
+
+    public String getDescription() {
+        return String.format("%s - %s", name, location);
+    }
 }

@@ -2,6 +2,7 @@ package com.castle.property.service;
 
 import com.castle.property.dto.HouseRequest;
 import com.castle.property.entity.House;
+import com.castle.property.entity.Property;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
@@ -20,4 +21,10 @@ public interface HouseService {
     List<House> listHouses();
 
     Page<House> getHouses(Pageable pageable);
+
+    Page<House> getHouses(String searchParam, UUID propertyPublicId, Pageable pageable);
+
+    House getHouseById(String rowKey);
+
+    Long getHouseCount(String searchParam, UUID propertyPublicId);
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum Floor {
+    FLOOR_Ground("Floor Ground"),
     FLOOR_1("Floor 1"),
     FLOOR_2("Floor 2"),
     FLOOR_3("Floor 3"),
@@ -29,6 +30,7 @@ public enum Floor {
     @JsonCreator
     public static Floor forValue(String value) {
         return switch (value.toUpperCase()) {
+            case "FLOOR GROUND" -> FLOOR_Ground;
             case "FLOOR 1" -> FLOOR_1;
             case "FLOOR 2" -> FLOOR_2;
             case "FLOOR 3" -> FLOOR_3;
@@ -42,5 +44,7 @@ public enum Floor {
         };
     }
 
-
+    public String getLabel() {
+        return label;
+    }
 }
