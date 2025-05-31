@@ -10,7 +10,6 @@
 <ui:composition template="templates/mainLayout.xhtml">
     <ui:define name="centerContent">
         <h:form id="dataForm">
-            <p:growl id="growl-sticky" for="sticky-key" showDetail="true" sticky="true" />
             <div class="card">
                 <p:dataTable id="recordsTable" var="house" tableStyle="table-layout:auto"
                              resizableColumns="true" resizeMode="expand" value="#{houseView.houses}"
@@ -26,15 +25,13 @@
                                 <p:selectOneMenu value="#{houseView.filterPropertyPublicId}" converter="uuidConverter" editable="false" style="width: 160px; padding-right: 5px;" label="Property">
                                     <f:selectItem itemLabel="Select Property" itemValue=""/>
                                     <f:selectItems value="#{houseView.properties}" var="property" itemLabel="#{property.description}" itemValue="#{property.publicId}"/>
-                                    <p:ajax event="change" listener="#{houseView.filter()}" update=":dataForm:headerPanel :dataForm:recordsTable :dataForm:growl-sticky"/>
+                                    <p:ajax event="change" listener="#{houseView.filter()}" update=":dataForm:headerPanel :dataForm:recordsTable"/>
                                 </p:selectOneMenu>
                                 <p:outputLabel for="search" value="Search" style="padding-right: 5px;"/>
-                                <p:inputText id="search"  value="#{houseView.searchParam}"
-                                              style="padding-right: 5px;"/>
-                                <p:commandButton value="Filter" actionListener="#{houseView.filter()}"
-                                                 update="@form" style="padding-right: 5px; padding-left: 5px;"/>
+                                <p:inputText id="search"  value="#{houseView.searchParam}" style="padding-right: 5px;"/>
+                                <p:commandButton value="Filter" actionListener="#{houseView.filter()}" update="@form" style="padding-right: 5px; padding-left: 5px;"/>
                                 <p:commandButton value="Clear" actionListener="#{houseView.clear()}"
-                                                 update=":dataForm:headerPanel :dataForm:recordsTable :dataForm:growl-sticky" style="padding-right: 5px;"/>
+                                                 update=":dataForm:headerPanel :dataForm:recordsTable :inputForm" style="padding-right: 5px;"/>
                                 <p:commandButton id="dlgBtn" value="#{houseView.dialogButtonTitle}" icon="pi pi-external-link" onclick="PF('dlg').show()"/>
                                 <p:commandButton id="toggler" type="button" value="Columns" icon="pi pi-align-justify"/>
                                 <p:columnToggler datasource="recordsTable" trigger="toggler"/>
@@ -42,7 +39,7 @@
                         </div>
                     </f:facet>
 
-                    <p:ajax event="rowSelect" listener="#{houseView.onRowSelect}" update=":dataForm:recordsTable:headerPanel dataForm:panel"/>
+                    <p:ajax event="rowSelect" listener="#{houseView.onRowSelect}" update=":dataForm:recordsTable:headerPanel inputForm:inputDlgPanel"/>
 
                     <p:column headerText="Id">
                         <h:outputText value="#{house.id}"/>
@@ -73,8 +70,11 @@
                     </p:column>
                 </p:dataTable>
             </div>
+        </h:form>
+        <h:form id="inputForm">
+            <p:growl id="growl-sticky" for="sticky-key" showDetail="true" sticky="true" />
             <p:dialog id="inputDlg" header="#{houseView.inputDialogTitle}" widgetVar="dlg" modal="false">
-                <h:panelGrid id="panel" columns="3" cellpadding="7">
+                <h:panelGrid id="inputDlgPanel" columns="3" cellpadding="7">
                     <p:outputLabel for="@next" value="Number"/>
                     <p:inputText value="#{houseView.houseRequest.number}" label="Number"/>
                     <p:message for="@previous"/>
@@ -93,15 +93,13 @@
                     </p:selectOneMenu>
                     <p:message for="@previous"/>
                 </h:panelGrid>
-
                 <f:facet name="footer">
                     <p:commandButton value="Cancel" styleClass="ui-button-flat mr-2" style="width: 6rem" onclick="PF('dlg').hide()"/>
                     <p:commandButton id="btnSave" value="Save" style="width: 5rem"
                                      ajax="true"
                                      actionListener="#{houseView.saveHouse()}"
-                                     update=":dataForm:panel :dataForm:recordsTable :dataForm:growl-sticky"/>
+                                     update=":inputForm:inputDlgPanel :dataForm:recordsTable :inputForm:growl-sticky"/>
                 </f:facet>
-
             </p:dialog>
         </h:form>
     </ui:define>

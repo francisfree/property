@@ -10,49 +10,8 @@
 <ui:composition template="templates/mainLayout.xhtml">
     <ui:define name="centerContent">
         <h:form id="dataForm">
-            <p:growl>
-                <p:autoUpdate/>
-            </p:growl>
             <div class="card">
-                <p:dialog id="editDlg" header="Edit Person" widgetVar="dlg3" minHeight="40" width="350" showEffect="fade" focus="btnSave" closeOnEscape="true">
-                    <h:panelGrid columns="3" cellpadding="7">
-                        <p:outputLabel for="@next" value="First Name"/>
-                        <p:inputText value="#{personView.personRequest.firstName}" label="First Name"/>
-                        <p:message for="@previous"/>
-
-                        <p:outputLabel for="@next" value="Surname"/>
-                        <p:inputText value="#{personView.personRequest.lastName}" label="Surname" />
-                        <p:message for="@previous"/>
-
-                        <p:outputLabel for="@next" value="Other Names"/>
-                        <p:inputText value="#{personView.personRequest.otherName}" label="Other Names"/>
-                        <p:message for="@previous"/>
-
-                        <p:outputLabel for="@next" value="Identification Type"/>
-                        <p:selectOneMenu value="#{personView.personRequest.identificationType}">
-                            <f:selectItems value="#{personView.identificationTypes}" var="identificationType" itemValue="#{identificationType}" itemLabel="#{identificationType}"/>
-                        </p:selectOneMenu>
-                        <p:message for="@previous"/>
-
-                        <p:outputLabel for="@next" value="Identification Value"/>
-                        <p:inputText value="#{personView.personRequest.identificationNumber}" label="Identification Value"/>
-                        <p:message for="@previous"/>
-
-                        <p:outputLabel for="@next" value="Phone Number"/>
-                        <p:inputText value="#{personView.personRequest.phoneNumber}" label="Phone Number"/>
-                        <p:message for="@previous"/>
-
-                        <p:outputLabel for="@next" value="Nationality"/>
-                        <p:inputText value="#{personView.personRequest.nationality}" label="Nationality"/>
-                        <p:message for="@previous"/>
-
-                    </h:panelGrid>
-                    <f:facet name="footer">
-                        <p:commandButton type="button" value="Cancel" styleClass="ui-button-flat mr-2" style="width: 6rem" onclick="PF('dlg3').hide()"/>
-                        <p:commandButton id="btnSave" value="Save" style="width: 5rem" actionListener="#{personView.savePerson()}" update=":dataForm"/>
-                    </f:facet>
-                </p:dialog>
-                <p:dataTable id="personsTable" var="person" tableStyle="table-layout:auto"
+                <p:dataTable id="recordsTable" var="person" tableStyle="table-layout:auto"
                              resizableColumns="true" resizeMode="expand" value="#{personView.persons}"
                              rows="25" lazy="true" paginator="true" paginatorPosition="bottom"
                              paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
@@ -69,15 +28,15 @@
                                 <p:commandButton value="Filter" actionListener="#{personView.filter()}"
                                                  update="@form" style="padding-right: 5px;"/>
                                 <p:commandButton value="Clear" actionListener="#{personView.clear()}"
-                                                 update="@form" style="padding-right: 5px;"/>
-                                <p:commandButton id="editBtn" value="Edit" type="button" icon="pi pi-external-link" onclick="PF('dlg3').show()" rendered="#{personView.selectedPerson != null}"/>
+                                                 update=":dataForm:headerPanel :dataForm:recordsTable :inputForm" style="padding-right: 5px;"/>
+                                <p:commandButton id="dlgBtn" value="#{personView.dialogButtonTitle}" icon="pi pi-external-link" onclick="PF('dlg').show()"/>
                                 <p:commandButton id="toggler" type="button" value="Columns" icon="pi pi-align-justify"/>
-                                <p:columnToggler datasource="personsTable" trigger="toggler"/>
+                                <p:columnToggler datasource="recordsTable" trigger="toggler"/>
                             </h:panelGroup>
                         </div>
                     </f:facet>
 
-                    <p:ajax event="rowSelect" listener="#{personView.onRowSelect}" update=":dataForm:personsTable:headerPanel :dataForm:editDlg"/>
+                    <p:ajax event="rowSelect" listener="#{personView.onRowSelect}" update=":dataForm:recordsTable:headerPanel inputForm:inputDlgPanel"/>
 
                     <p:column headerText="Id">
                         <h:outputText value="#{person.id}"/>
@@ -118,6 +77,51 @@
                     </p:column>
                 </p:dataTable>
             </div>
+        </h:form>
+
+        <h:form id="inputForm">
+            <p:growl id="growl-sticky" for="sticky-key" showDetail="true" sticky="true" />
+            <p:dialog id="inputDlg" header="#{personView.inputDialogTitle}" widgetVar="dlg" modal="false">
+                <h:panelGrid id="inputDlgPanel" columns="3" cellpadding="7">
+                    <p:outputLabel for="@next" value="First Name"/>
+                    <p:inputText value="#{personView.personRequest.firstName}" label="First Name"/>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Surname"/>
+                    <p:inputText value="#{personView.personRequest.lastName}" label="Surname" />
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Other Names"/>
+                    <p:inputText value="#{personView.personRequest.otherName}" label="Other Names"/>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Identification Type"/>
+                    <p:selectOneMenu value="#{personView.personRequest.identificationType}">
+                        <f:selectItems value="#{personView.identificationTypes}" var="identificationType" itemValue="#{identificationType}" itemLabel="#{identificationType}"/>
+                    </p:selectOneMenu>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Identification Value"/>
+                    <p:inputText value="#{personView.personRequest.identificationNumber}" label="Identification Value"/>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Phone Number"/>
+                    <p:inputText value="#{personView.personRequest.phoneNumber}" label="Phone Number"/>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Nationality"/>
+                    <p:inputText value="#{personView.personRequest.nationality}" label="Nationality"/>
+                    <p:message for="@previous"/>
+
+                </h:panelGrid>
+                <f:facet name="footer">
+                    <p:commandButton value="Cancel" styleClass="ui-button-flat mr-2" style="width: 6rem" onclick="PF('dlg').hide()"/>
+                    <p:commandButton id="btnSave" value="Save" style="width: 5rem"
+                                     ajax="true"
+                                     actionListener="#{personView.savePerson()}"
+                                     update=":inputForm:inputDlgPanel :dataForm:recordsTable :inputForm:growl-sticky"/>
+                </f:facet>
+            </p:dialog>
         </h:form>
     </ui:define>
 </ui:composition>

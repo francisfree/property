@@ -78,13 +78,12 @@ public class PropertyView implements Serializable {
     }
 
     public void clear() {
-        filter();
         setSearchParam(null);
         setSelectedProperty(null);
         setPropertyRequest(new PropertyRequest());
         setInputDialogTitle("New Property");
         setDialogButtonTitle("New");
-
+        filter();
     }
 
     public void onRowSelect(SelectEvent<Property> event) {

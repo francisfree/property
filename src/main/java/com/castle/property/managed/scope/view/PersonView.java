@@ -5,9 +5,11 @@ import com.castle.property.dto.PersonRequest;
 import com.castle.property.entity.Person;
 import com.castle.property.service.PersonService;
 import jakarta.annotation.PostConstruct;
+import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+import jakarta.validation.ConstraintViolationException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,18 +36,16 @@ public class PersonView implements Serializable {
     private Person selectedPerson;
     private String searchParam;
     private int rowCount;
-    private boolean create;
-    private boolean view;
     private PersonRequest personRequest;
+    private String inputDialogTitle;
+    private String dialogButtonTitle;
 
     @Autowired
     private PersonService personService;
 
-
     @PostConstruct
     public void init() {
-        filter();
-        setPersonRequest(new PersonRequest());
+        clear();
     }
 
 
@@ -71,17 +71,16 @@ public class PersonView implements Serializable {
                 return personService.getPersons(getSearchParam(), PageRequest.of((first / pageSize), pageSize)).getContent();
             }
         };
-        DataTable dataTable = (DataTable) FacesContext.getCurrentInstance().getViewRoot().findComponent("dataForm:personsTable");
+        DataTable dataTable = (DataTable) FacesContext.getCurrentInstance().getViewRoot().findComponent("dataForm:recordsTable");
         dataTable.setFirst(0);
-        setView(false);
-        setCreate(false);
     }
 
     public void clear() {
-        filter();
-        setView(false);
-        setCreate(false);
         setSearchParam(null);
+        setPersonRequest(new PersonRequest());
+        setInputDialogTitle("New Person");
+        setDialogButtonTitle("New");
+        filter();
     }
 
     public IdentificationType[] getIdentificationTypes() {
@@ -97,20 +96,35 @@ public class PersonView implements Serializable {
             getPersonRequest().setIdentificationNumber(getSelectedPerson().getIdentificationNumber());
             getPersonRequest().setNationality(getSelectedPerson().getNationality());
             getPersonRequest().setPhoneNumber(getSelectedPerson().getPhoneNumber());
-            setView(true);
-            setCreate(false);
         }
     }
 
     public void savePerson() {
-        log.info("saveCalled getSelectedPerson() = {}", getSelectedPerson() == null);
-        if (getSelectedPerson() != null) {
-            personService.updatePerson(getSelectedPerson().getPublicId(), getPersonRequest());
-            setSelectedPerson(null);
-//            setPersonRequest(null);
-            filter();
+        try {
+            FacesMessage message;
+            if (getSelectedPerson() != null) {
+                personService.updatePerson(getSelectedPerson().getPublicId(), getPersonRequest());
+                message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Update Record", "Details Saved");
+            } else {
+                personService.createPerson(getPersonRequest());
+                message = new FacesMessage(FacesMessage.SEVERITY_INFO, "New Record", "Details Saved");
+            }
+            clear();
+            PrimeFaces.current().executeScript("PF('dlg').hide()");
+            FacesContext.getCurrentInstance().addMessage("sticky-key", message);
+        } catch (ConstraintViolationException e) {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("\n");
+            e.getConstraintViolations().forEach(constraintViolation -> {
+                stringBuilder.append(constraintViolation.getMessage()).append("\n");
+            });
+            FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error!", stringBuilder.toString());
+            FacesContext.getCurrentInstance().addMessage("sticky-key", message);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error!", e.getMessage());
+            FacesContext.getCurrentInstance().addMessage("sticky-key", message);
         }
-        PrimeFaces.current().dialog().closeDynamic(null);
     }
 
 }
