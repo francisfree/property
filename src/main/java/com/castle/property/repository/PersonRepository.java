@@ -10,4 +10,6 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
     Optional<Person> findByPublicId(UUID publicId);
 
     Optional<Person> findById(Long id);
+
+    Optional<Person> findByFirstNameIgnoreCaseAndLastNameIgnoreCaseAndOtherNameIgnoreCaseAndPhoneNumberIgnoreCase(String firstname, String lastname, String otherName, String phoneNumber);
 }

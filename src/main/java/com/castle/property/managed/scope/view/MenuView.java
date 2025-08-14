@@ -24,7 +24,7 @@ public class MenuView implements Serializable {
     }
 
     public String menuAction4() {
-        return "persons.xhtml?faces-redirect=true";
+        return "rentals.xhtml?faces-redirect=true";
     }
 
     public String menuAction5() {

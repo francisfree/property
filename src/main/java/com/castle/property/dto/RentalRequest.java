@@ -1,16 +1,19 @@
 package com.castle.property.dto;
 
 import com.castle.property.datatype.IdentificationType;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import com.castle.property.entity.Person;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
+
+import java.math.BigDecimal;
+import java.util.UUID;
 
 @Getter
+@ToString
 @Setter
-public class PersonRequest {
+public class RentalRequest {
     @NotBlank
     @Size(max = 250)
     private String firstName;
@@ -36,4 +39,12 @@ public class PersonRequest {
     @Size(max = 20)
     @Pattern(regexp = "^(\\+254|0)(7[0-9]|1[0-1])[0-9]{7}$", message = "invalid phone number ${validatedValue}")
     private String phoneNumber;
+
+    @NotNull(message = "missing house")
+    private UUID housePublicId;
+
+    @NotNull(message = "amount missing")
+    @Min(value = 0)
+    private BigDecimal amount;
+
 }

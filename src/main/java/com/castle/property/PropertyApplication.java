@@ -1,6 +1,7 @@
 package com.castle.property;
 
 import jakarta.faces.application.ViewExpiredException;
+import jakarta.faces.webapp.FacesServlet;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.SessionTrackingMode;
@@ -10,6 +11,7 @@ import org.springframework.boot.web.server.ErrorPage;
 import org.springframework.boot.web.server.ErrorPageRegistrar;
 import org.springframework.boot.web.server.ErrorPageRegistry;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.TaskScheduler;
@@ -35,6 +37,13 @@ public class PropertyApplication {
     }
 
     @Bean
+    public ServletRegistrationBean<FacesServlet> facesServletRegistration() {
+        ServletRegistrationBean<FacesServlet> registration = new ServletRegistrationBean<>(new FacesServlet(), "*.xhtml");
+        registration.setLoadOnStartup(1);
+        return registration;
+    }
+
+    @Bean
     public ServletContextInitializer initializer() {
         return new ServletContextInitializer() {
             @Override
@@ -42,7 +51,14 @@ public class PropertyApplication {
                 servletContext.setInitParameter("jakarta.faces.FACELETS_SKIP_COMMENTS", "true");
                 servletContext.setInitParameter("com.sun.faces.expressionFactory", "com.sun.el.ExpressionFactoryImpl");
                 servletContext.setInitParameter("primefaces.UPLOADER", "native");
+
                 servletContext.setInitParameter("jakarta.faces.AUTOMATIC_EXTENSIONLESS_MAPPING", "true");
+                servletContext.setInitParameter("jakarta.faces.PROJECT_STAGE", "Development");
+                servletContext.setInitParameter("jakarta.faces.FACELETS_REFRESH_PERIOD", "1");
+                servletContext.setInitParameter("jakarta.faces.validate.EMPTY_FIELDS", "true");
+                servletContext.setInitParameter("jakarta.faces.INTERPRET_EMPTY_STRING_SUBMITTED_VALUES_AS_NULL", "true");
+                servletContext.setInitParameter("primefaces.THEME", "saga");
+                servletContext.setInitParameter("primefaces.FONT_AWESOME", "true");
                 servletContext.setSessionTimeout(60);
                 servletContext.setSessionTrackingModes(EnumSet.of(SessionTrackingMode.COOKIE));
 

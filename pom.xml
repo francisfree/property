@@ -131,6 +131,20 @@
             <classifier>jakarta</classifier>
         </dependency>
 
+        <dependency>
+            <groupId>org.omnifaces</groupId>
+            <artifactId>omnifaces</artifactId>
+            <version>4.6.5</version>
+        </dependency>
+
+        <!-- Weld for CDI -->
+        <dependency>
+            <groupId>org.jboss.weld.servlet</groupId>
+            <artifactId>weld-servlet-shaded</artifactId>
+            <version>5.1.0.Final</version>
+        </dependency>
+
+
         <!-- https://mvnrepository.com/artifact/org.primefaces.themes/bootstrap -->
 <!--        <dependency>-->
 <!--            <groupId>org.primefaces.themes</groupId>-->

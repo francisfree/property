@@ -98,7 +98,7 @@ public class HouseServiceTests extends PropertyApplicationTests {
 
     @Test
     public void listHouseWorks() {
-        List<House> houses = houseService.listHouses();
+        List<House> houses = houseService.listHouses(null);
         MatcherAssert.assertThat(houses.size(), greaterThanOrEqualTo(1));
     }
 }

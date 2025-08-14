@@ -1,0 +1,225 @@
+<?xml version="1.0"  encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:pe="http://primefaces.org/ui/extensions"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:o="http://omnifaces.org/ui"
+      xmlns:of="http://omnifaces.org/functions">
+
+<ui:composition template="templates/mainLayout.xhtml">
+    <ui:define name="centerContent">
+        <h:form id="dataForm">
+            <div class="card">
+                <p:dataTable id="recordsTable" var="rental" tableStyle="table-layout:auto"
+                             resizableColumns="true" resizeMode="expand" value="#{rentalView.rentals}"
+                             rows="25" lazy="true" paginator="true" paginatorPosition="bottom"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             currentPageReportTemplate="{startRecord}-{endRecord} of {totalRecords} records"
+                             rowsPerPageTemplate="5,10,25,{ShowAll|'All'}"
+                             selection="#{rentalView.selectedRental}" selectionMode="single">
+                    <f:facet name="header">
+                        <div class="flex justify-content-between align-items-center">
+                            Rentals
+                            <h:panelGroup id="headerPanel">
+                                <p:outputLabel for="search" value="Search" style="padding-right: 5px;"/>
+                                <p:inputText id="search"  value="#{rentalView.searchParam}"
+                                              style="padding-right: 5px; margin-left:10px;"/>
+
+                                <p:selectOneMenu id="filterPropertySelect"
+                                                 value="#{rentalView.filterPropertyPublicId}"
+                                                 converter="uuidConverter"
+                                                 filter="true"
+                                                 filterMatchMode="startsWith"
+                                                 filterPlaceholder="Search property..."
+                                                 style="width: 150px; margin-left:10px;">
+                                    <f:selectItem itemLabel="Select Property" itemValue="" noSelectionOption="true" />
+                                    <f:selectItems value="#{rentalView.properties}"
+                                                   var="property"
+                                                   itemLabel="#{property.name} - #{property.area}"
+                                                   itemValue="#{property.publicId}" />
+
+                                    <p:ajax event="valueChange"
+                                            listener="#{rentalView.onFilterPropertyChange()}"
+                                            update=":dataForm:headerPanel :dataForm:recordsTable" />
+                                </p:selectOneMenu>
+
+                                <p:selectOneMenu id="filterHouseSelect"
+                                                 value="#{rentalView.filterHousePublicId}"
+                                                 converter="uuidConverter"
+                                                 dynamic="true"
+                                                 filter="true"
+                                                 filterMatchMode="startsWith"
+                                                 filterPlaceholder="Search houses..."
+                                                 style="width: 190px; margin-left:10px;">
+                                    <f:selectItem itemLabel="Select House" itemValue="" noSelectionOption="true" />
+                                    <f:selectItems value="#{rentalView.filterHouses}"
+                                                   var="house"
+                                                   itemLabel="#{house.number} - #{house.floor} (#{house.property.name})"
+                                                   itemValue="#{house.publicId}" />
+                                </p:selectOneMenu>
+
+                                <p:commandButton value="Filter" actionListener="#{rentalView.filter()}"
+                                                 update="@form" style="padding-right: 5px; margin-left:10px;"/>
+                                <p:commandButton value="Clear" actionListener="#{rentalView.clear()}"
+                                                 update=":dataForm:headerPanel :dataForm:recordsTable :inputForm"
+                                                 style="padding-right: 5px; margin-left:10px;"/>
+
+                                <p:commandButton id="dlgBtn" value="#{rentalView.dialogButtonTitle}" icon="pi pi-external-link" onclick="PF('dlg').show()"
+                                                 style="padding-right: 5px; margin-left:10px;"/>
+                                <p:commandButton id="toggler" type="button" value="Columns" icon="pi pi-align-justify"
+                                                 style="padding-right: 5px; margin-left:10px;"/>
+                                <p:columnToggler datasource="recordsTable" trigger="toggler"/>
+                            </h:panelGroup>
+                        </div>
+                    </f:facet>
+
+                    <p:ajax event="rowSelect" listener="#{rentalView.onRowSelect}" update=":dataForm:recordsTable:headerPanel inputForm:inputDlgPanel"/>
+
+                    <p:column headerText="Id">
+                        <h:outputText value="#{rental.id}"/>
+                    </p:column>
+
+                    <p:column headerText="Date">
+                        <h:outputText value="#{rental.dateCreated}">
+                            <f:convertDateTime type="localDateTime" pattern="dd-MM-yyyy hh:mm:ss.SSS a"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="Arrears Status">
+                        <h:outputText value="#{rental.arrearStatus}"/>
+                    </p:column>
+
+                    <p:column headerText="Account Status">
+                        <h:outputText value="#{rental.accountStatus}"/>
+                    </p:column>
+
+                    <p:column headerText="Amount">
+                        <h:outputText value="#{rental.amount}"/>
+                    </p:column>
+
+                    <p:column headerText="Property">
+                        <h:outputText value="#{rental.house.property.name}"/>
+                    </p:column>
+
+                    <p:column headerText="Floor">
+                        <h:outputText value="#{rental.house.floor}"/>
+                    </p:column>
+
+                    <p:column headerText="House Number">
+                        <h:outputText value="#{rental.house.number}"/>
+                    </p:column>
+
+                    <p:column headerText="First Name">
+                        <h:outputText value="#{rental.person.firstName}"/>
+                    </p:column>
+
+                    <p:column headerText="Last Name">
+                        <h:outputText value="#{rental.person.lastName}"/>
+                    </p:column>
+
+                    <p:column headerText="Other Name">
+                        <h:outputText value="#{rental.person.otherName}"/>
+                    </p:column>
+
+                    <p:column headerText="Phone Number">
+                        <h:outputText value="#{rental.person.phoneNumber}"/>
+                    </p:column>
+                </p:dataTable>
+            </div>
+        </h:form>
+
+        <h:form id="inputForm">
+            <p:growl id="growl-sticky" for="sticky-key" showDetail="true" sticky="true" />
+            <p:dialog id="inputDlg" header="#{rentalView.inputDialogTitle}" widgetVar="dlg" modal="false">
+                <h:panelGrid id="inputDlgPanel" columns="3" cellpadding="7">
+                    <p:outputLabel for="@next" value="Property"/>
+                    <p:selectOneMenu id="propertySelect"
+                                     value="#{rentalView.propertyPublicId}"
+                                     converter="uuidConverter"
+                                     filter="true"
+                                     filterMatchMode="startsWith"
+                                     filterPlaceholder="Search property..."
+                                     style="width: 250px;">
+                        <f:selectItem itemLabel="Select Property" itemValue="" noSelectionOption="true" />
+                        <f:selectItems value="#{rentalView.properties}"
+                                       var="property"
+                                       itemLabel="#{property.name} - #{property.area}"
+                                       itemValue="#{property.publicId}" />
+
+                        <p:ajax event="valueChange"
+                                listener="#{rentalView.onPropertyChange}"
+                                update=":inputForm:inputDlgPanel" />
+                    </p:selectOneMenu>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="House"/>
+                    <p:selectOneMenu id="houseSelect"
+                                     value="#{rentalView.rentalRequest.housePublicId}"
+                                     converter="uuidConverter"
+                                     dynamic="true"
+                                     filter="true"
+                                     filterMatchMode="startsWith"
+                                     filterPlaceholder="Search houses..."
+                                     style="width: 250px;">
+                        <f:selectItem itemLabel="Select House" itemValue="" noSelectionOption="true" />
+                        <f:selectItems value="#{rentalView.houses}"
+                                       var="house"
+                                       itemLabel="#{house.number} - #{house.floor} (#{house.property.name})"
+                                       itemValue="#{house.publicId}" />
+                    </p:selectOneMenu>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Amount"/>
+                    <p:inputNumber value="#{rentalView.rentalRequest.amount}" label="Amount" decimalPlaces="2" size="33"/>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="First Name"/>
+                    <p:inputText value="#{rentalView.rentalRequest.firstName}" label="First Name" size="33"/>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Surname"/>
+                    <p:inputText value="#{rentalView.rentalRequest.lastName}" label="Surname" size="33" />
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Other Names"/>
+                    <p:inputText value="#{rentalView.rentalRequest.otherName}" label="Other Names" size="33"/>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Identification Type"/>
+                    <p:selectOneMenu value="#{rentalView.rentalRequest.identificationType}" style="width: 250px;">
+                        <f:selectItems value="#{rentalView.identificationTypes}" var="identificationType"
+                                       itemValue="#{identificationType}"
+                                       itemLabel="#{identificationType}"/>
+                    </p:selectOneMenu>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Identification Value"/>
+                    <p:inputText value="#{rentalView.rentalRequest.identificationNumber}" label="Identification Value" size="33"/>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Phone Number"/>
+                    <p:inputText value="#{rentalView.rentalRequest.phoneNumber}" label="Phone Number" size="33"/>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Nationality"/>
+                    <p:inputText value="#{rentalView.rentalRequest.nationality}" label="Nationality" size="33"/>
+                    <p:message for="@previous"/>
+
+                </h:panelGrid>
+                <f:facet name="footer">
+                    <p:commandButton value="Cancel" styleClass="ui-button-flat mr-2" style="width: 6rem" onclick="PF('dlg').hide()"/>
+                    <p:commandButton id="btnSave" value="Save" style="width: 5rem"
+                                     ajax="true"
+                                     actionListener="#{rentalView.saveRental()}"
+                                     update=":inputForm:inputDlgPanel :dataForm:recordsTable :inputForm:growl-sticky"/>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+
+    </ui:define>
+</ui:composition>
+
+</html>

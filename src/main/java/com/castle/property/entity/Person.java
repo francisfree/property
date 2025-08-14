@@ -34,4 +34,11 @@ public class Person extends AbstractAuditableActivityEntity {
 
     @Column(name = "phone_number")
     private String phoneNumber;
+
+    @Transient
+    private String componentLabel;
+
+    public String getComponentLabel() {
+        return String.format("%s (%s %s %s)", phoneNumber, firstName, lastName, otherName);
+    }
 }

@@ -2,6 +2,8 @@ package com.castle.property.service;
 
 import com.castle.property.application.config.exception.ApplicationOperationException;
 import com.castle.property.datatype.Floor;
+import com.castle.property.datatype.HouseStatus;
+import com.castle.property.dto.HouseActionRequest;
 import com.castle.property.dto.HouseRequest;
 import com.castle.property.entity.House;
 import com.castle.property.entity.Property;
@@ -51,6 +53,7 @@ public class HouseServiceImpl implements HouseService {
         house.setFloor(request.getFloor());
         house.setNumber(request.getNumber());
         house.setProperty(property);
+        house.setStatus(HouseStatus.Vacant);
         return houseRepository.save(house);
     }
 
@@ -69,6 +72,22 @@ public class HouseServiceImpl implements HouseService {
         return houseRepository.save(house);
     }
 
+    @Override
+    public House houseActions(UUID housePublicId, HouseActionRequest request) {
+        House house = getHouse(housePublicId);
+
+        if (request.getActionType() == HouseActionRequest.ActionTypes.Occupied) {
+            house.setStatus(HouseStatus.Occupied);
+            house.setCurrentMonthlyRent(request.getAmount());
+        } else if (request.getActionType() == HouseActionRequest.ActionTypes.Vacant) {
+            house.setStatus(HouseStatus.Vacant);
+            house.setCurrentMonthlyRent(null);
+        } else if (request.getActionType() == HouseActionRequest.ActionTypes.ChangeAmount) {
+            house.setCurrentMonthlyRent(request.getAmount());
+        }
+
+        return houseRepository.save(house);
+    }
 
     @Override
     public House getHouse(@NotNull UUID housePublicId) {
@@ -76,8 +95,16 @@ public class HouseServiceImpl implements HouseService {
     }
 
     @Override
-    public List<House> listHouses() {
-        return houseRepository.findAll();
+    public List<House> listHouses(UUID propertyPublicId) {
+        if (propertyPublicId != null) {
+            return houseRepository.findByPropertyPublicId(propertyPublicId);
+        }
+        return houseRepository.findAllOrderByProperty();
+    }
+
+    @Override
+    public List<Property> listProperties() {
+        return propertyService.listProperties();
     }
 
     @Override
@@ -136,7 +163,7 @@ public class HouseServiceImpl implements HouseService {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
         Root<House> countRoot = countQuery.from(House.class);
-        final List<Predicate> countPredicates = housePredicates(searchParam, propertyPublicId,cb, countRoot);
+        final List<Predicate> countPredicates = housePredicates(searchParam, propertyPublicId, cb, countRoot);
         countQuery.select(cb.count(countRoot));
         countQuery.where(countPredicates.toArray(new Predicate[countPredicates.size()]));
 

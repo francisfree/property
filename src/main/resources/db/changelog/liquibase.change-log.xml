@@ -131,4 +131,55 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="202250401 10:05" author="francis">
+        <preConditions>
+            <not>
+                <columnExists tableName="rentals" columnName="status"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="rentals">
+            <column name="status" type="varchar(250)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="202250401 10:06" author="francis">
+        <preConditions>
+            <not>
+                <columnExists tableName="houses" columnName="status"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="houses">
+            <column name="status" type="varchar(250)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="202250401 10:07" author="francis">
+        <preConditions>
+            <not>
+                <columnExists tableName="houses" columnName="current_monthly_rent"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="houses">
+            <column name="current_monthly_rent" type="numeric(11,2)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="202250401 10:08" author="francis">
+        <preConditions>
+            <not>
+                <columnExists tableName="rentals" columnName="account_status"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="rentals">
+            <column name="account_status" type="varchar(250)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="202250401 10:09" author="francis">
+        <preConditions>
+            <columnExists tableName="rentals" columnName="status"/>
+        </preConditions>
+        <renameColumn tableName="rentals" oldColumnName="status" newColumnName="arrears_status"/>
+    </changeSet>
+
 </databaseChangeLog>

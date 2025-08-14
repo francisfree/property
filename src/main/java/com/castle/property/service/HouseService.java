@@ -1,8 +1,11 @@
 package com.castle.property.service;
 
+import com.castle.property.dto.HouseActionRequest;
 import com.castle.property.dto.HouseRequest;
+import com.castle.property.dto.RentalActionRequest;
 import com.castle.property.entity.House;
 import com.castle.property.entity.Property;
+import com.castle.property.entity.Rental;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
@@ -16,9 +19,13 @@ public interface HouseService {
 
     House updateHouse(@NotNull UUID housePublicId, @Valid HouseRequest request);
 
+    House houseActions(@NotNull UUID housePublicId, @Valid HouseActionRequest request);
+
     House getHouse(@NotNull UUID housePublicId);
 
-    List<House> listHouses();
+    List<House> listHouses(UUID propertyPublicId);
+
+    List<Property> listProperties();
 
     Page<House> getHouses(Pageable pageable);
 

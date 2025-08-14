@@ -32,10 +32,7 @@ import javax.crypto.spec.PBEKeySpec;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,15 +48,21 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public Person createPerson(@Valid PersonRequest request) {
-        Person person = new Person();
-        person.setFirstName(request.getFirstName());
-        person.setLastName(request.getLastName());
-        person.setOtherName(request.getOtherName());
-        person.setIdentificationNumber(request.getIdentificationNumber());
-        person.setIdentificationType(request.getIdentificationType());
-        person.setNationality(request.getNationality());
-        person.setPhoneNumber(request.getPhoneNumber());
-        return personRepository.save(person);
+
+        Optional<Person> optionalPerson = personRepository.findByFirstNameIgnoreCaseAndLastNameIgnoreCaseAndOtherNameIgnoreCaseAndPhoneNumberIgnoreCase(request.getFirstName(), request.getLastName(), request.getOtherName(), request.getPhoneNumber());
+        if (optionalPerson.isPresent()) {
+            return optionalPerson.get();
+        } else {
+            Person person = new Person();
+            person.setFirstName(request.getFirstName());
+            person.setLastName(request.getLastName());
+            person.setOtherName(request.getOtherName());
+            person.setIdentificationNumber(request.getIdentificationNumber());
+            person.setIdentificationType(request.getIdentificationType());
+            person.setNationality(request.getNationality());
+            person.setPhoneNumber(request.getPhoneNumber());
+            return personRepository.save(person);
+        }
     }
 
     @Override
