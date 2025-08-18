@@ -89,6 +89,9 @@ public class RentalServiceImpl implements RentalService {
     public Rental rentalActions(@NotNull UUID rentalPublicId, @Valid RentalActionRequest request) {
         Rental rental = getRental(rentalPublicId);
         if (request.getActionType() == RentalActionRequest.ActionTypes.ChangeAmount) {
+            if (request.getAmount() == null) {
+                throw new ApplicationOperationException("rental.action.change.amount.missing");
+            }
             rental.setAmount(request.getAmount());
 
             HouseActionRequest houseActionRequest = new HouseActionRequest();
@@ -117,7 +120,7 @@ public class RentalServiceImpl implements RentalService {
 
     @Override
     public Page<Rental> getRentals(String searchParam, UUID housePublicId, Pageable pageable) {
-        return searchRentals(null, housePublicId,null, null, searchParam, pageable);
+        return searchRentals(null, housePublicId, null, null, searchParam, pageable);
     }
 
     @Override

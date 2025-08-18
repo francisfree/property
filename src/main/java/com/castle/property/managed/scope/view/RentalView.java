@@ -1,6 +1,8 @@
 package com.castle.property.managed.scope.view;
 
 import com.castle.property.datatype.IdentificationType;
+import com.castle.property.datatype.RentalAccountStatus;
+import com.castle.property.dto.RentalActionRequest;
 import com.castle.property.dto.RentalRequest;
 import com.castle.property.entity.House;
 import com.castle.property.entity.Person;
@@ -20,10 +22,14 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.primefaces.PrimeFaces;
 import org.primefaces.component.datatable.DataTable;
+import org.primefaces.event.MenuActionEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortMeta;
+import org.primefaces.model.menu.DefaultMenuItem;
+import org.primefaces.model.menu.DefaultMenuModel;
+import org.primefaces.model.menu.MenuModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -54,6 +60,8 @@ public class RentalView implements Serializable {
     private RentalRequest rentalRequest;
     private String inputDialogTitle;
     private String dialogButtonTitle;
+    private RentalActionRequest rentalActionRequest;
+    private String updateComponents;
 
     @Autowired
     private RentalService rentalService;
@@ -110,6 +118,7 @@ public class RentalView implements Serializable {
         setFilterPropertyPublicId(null);
         setFilterHousePublicId(null);
         setSelectedRental(null);
+        setRentalActionRequest(new RentalActionRequest());
         filter();
     }
 
@@ -150,7 +159,7 @@ public class RentalView implements Serializable {
     }
 
     public void onItemSelect(SelectEvent<String> event) {
-        log.info("selected person {}", event.getObject());
+        log.info("selected rental {}", event.getObject());
     }
 
     public void saveRental() {
@@ -178,7 +187,127 @@ public class RentalView implements Serializable {
         }
     }
 
-    public Person getPersonByPublicId(String publicId) {
-        return personService.getPerson(UUID.fromString(publicId));
+    public void changeAmount() {
+        try {
+            if (getSelectedRental() != null) {
+                FacesMessage message;
+                rentalActionRequest.setActionType(RentalActionRequest.ActionTypes.ChangeAmount);
+                rentalService.rentalActions(getSelectedRental().getPublicId(), rentalActionRequest);
+
+                clear();
+
+                PrimeFaces.current().ajax().update("changeAmountForm");
+                PrimeFaces.current().executeScript("PF('change-amount-dlg').hide()");
+
+                message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Amount Changed", "Details Saved");
+                FacesContext.getCurrentInstance().addMessage("sticky-key", message);
+            }
+        } catch (ConstraintViolationException e) {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("\n");
+            e.getConstraintViolations().forEach(constraintViolation -> {
+                stringBuilder.append(constraintViolation.getMessage()).append("\n");
+            });
+            FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error!", stringBuilder.toString());
+            FacesContext.getCurrentInstance().addMessage("sticky-key", message);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error!", e.getMessage());
+            FacesContext.getCurrentInstance().addMessage("sticky-key", message);
+        }
     }
+
+    public void closeAccount() {
+        try {
+            if (getSelectedRental() != null) {
+                FacesMessage message;
+                rentalActionRequest.setActionType(RentalActionRequest.ActionTypes.CloseAccount);
+                rentalService.rentalActions(getSelectedRental().getPublicId(), rentalActionRequest);
+
+                clear();
+
+                PrimeFaces.current().ajax().update("closeAccountForm");
+                PrimeFaces.current().executeScript("PF('close-account-dlg').hide()");
+
+                message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Account Closed", "Details Saved");
+                FacesContext.getCurrentInstance().addMessage("sticky-key", message);
+            }
+        } catch (ConstraintViolationException e) {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("\n");
+            e.getConstraintViolations().forEach(constraintViolation -> {
+                stringBuilder.append(constraintViolation.getMessage()).append("\n");
+            });
+            FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error!", stringBuilder.toString());
+            FacesContext.getCurrentInstance().addMessage("sticky-key", message);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error!", e.getMessage());
+            FacesContext.getCurrentInstance().addMessage("sticky-key", message);
+        }
+    }
+
+    /**
+     * Creates a context menu model for each row item
+     */
+    public MenuModel getMenuModel(Rental item) {
+        DefaultMenuModel model = new DefaultMenuModel();
+
+        // View action
+        DefaultMenuItem viewItem = DefaultMenuItem.builder()
+                .value("View")
+                .icon("pi pi-eye")
+                .command("#{rentalView.delete}")
+                .build();
+        model.getElements().add(viewItem);
+
+        // Change Amount action
+        DefaultMenuItem changeAmountMenuItem = DefaultMenuItem.builder()
+                .value("Change Amount")
+                .icon("pi pi-pencil")
+                .onclick("PF('change-amount-dlg').show()")
+                .build();
+        model.getElements().add(changeAmountMenuItem);
+
+        if (item.getAccountStatus() == RentalAccountStatus.Active) {
+            DefaultMenuItem closeAccountMenuItem = DefaultMenuItem.builder()
+                    .value("Close Account")
+                    .icon("pi pi-times-circle")
+                    .onclick("PF('close-account-dlg').show()")
+                    .build();
+            model.getElements().add(closeAccountMenuItem);
+        }
+
+//        // Delete action with confirmation
+//        DefaultMenuItem deleteItem = DefaultMenuItem.builder()
+//                .value("Delete")
+//                .icon("pi pi-trash")
+//                .command("#{rentalView.menuItemActionPreChecks}")
+//                .update(":dataForm:messages :dataForm:recordsTable")
+//                .onclick("return confirm('Are you sure you want to delete this item?')")
+//                .build();
+//        model.getElements().add(deleteItem);
+//
+//        // Conditional menu items based on status
+//        if (item.getAccountStatus() == RentalAccountStatus.Active) {
+//            DefaultMenuItem deactivateItem = DefaultMenuItem.builder()
+//                    .value("Deactivate")
+//                    .icon("pi pi-ban")
+//                    .command("#{rentalView.delete}")
+//                    .update(":dataForm:messages :dataForm:recordsTable")
+//                    .build();
+//            model.getElements().add(deactivateItem);
+//        } else if (item.getAccountStatus() == RentalAccountStatus.Closed) {
+//            DefaultMenuItem activateItem = DefaultMenuItem.builder()
+//                    .value("Activate")
+//                    .icon("pi pi-check")
+//                    .command("#{rentalView.delete}")
+//                    .update(":dataForm:messages :dataForm:recordsTable")
+//                    .build();
+//            model.getElements().add(activateItem);
+//        }
+
+        return model;
+    }
+
 }

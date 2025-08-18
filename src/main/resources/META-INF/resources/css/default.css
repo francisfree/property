@@ -29,3 +29,58 @@ html .justify-content-between {
 html .align-items-center {
     align-items: center !important
 }
+/* Custom styles for the three-dot menu button */
+.ui-datatable .ui-menubutton {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.ui-datatable .ui-menubutton:hover {
+    background-color: var(--surface-hover) !important;
+}
+
+.ui-datatable .ui-menubutton .ui-button {
+    padding: 0.5rem !important;
+    width: 2rem !important;
+    height: 2rem !important;
+}
+
+/* Style the three dots icon */
+.ui-datatable .ui-menubutton .pi-ellipsis-v {
+    font-size: 1rem;
+    color: var(--text-color-secondary);
+}
+
+.ui-datatable .ui-menubutton:hover .pi-ellipsis-v {
+    color: var(--text-color);
+}
+
+/* Custom menu item styles */
+.ui-menu .ui-menuitem-link {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+.ui-menu .ui-menuitem-icon {
+    margin-right: 0 !important;
+}
+
+/* Hover effects for menu items */
+.ui-menu .ui-menuitem-link:hover {
+    background-color: var(--surface-hover) !important;
+}
+
+/* Color coding for different actions */
+.ui-menu .ui-menuitem-link[onclick*="delete"]:hover,
+.ui-menu .ui-menuitem-link[onclick*="Delete"]:hover {
+    background-color: var(--red-50) !important;
+    color: var(--red-600) !important;
+}
+
+.ui-menu .ui-menuitem-link[onclick*="activate"]:hover,
+.ui-menu .ui-menuitem-link[onclick*="Activate"]:hover {
+    background-color: var(--green-50) !important;
+    color: var(--green-600) !important;
+}

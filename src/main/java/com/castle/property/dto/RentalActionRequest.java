@@ -13,7 +13,7 @@ public class RentalActionRequest {
     @NotNull
     private RentalActionRequest.ActionTypes actionType;
 
-    @Min(value = 0)
+    @Min(value = 1)
     private BigDecimal amount;
 
     public enum ActionTypes {
