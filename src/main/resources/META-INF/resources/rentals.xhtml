@@ -208,7 +208,7 @@
                 <h:panelGrid id="filterDlgPanel" layout="flex" columns="2" cellpadding="7">
                     <p:outputLabel for="@next" value="Property"/>
                     <p:selectOneMenu id="filterPropertySelect"
-                                     value="#{rentalView.filterPropertyPublicId}"
+                                     value="#{rentalView.rentalFilterRequest.propertyPublicId}"
                                      converter="uuidConverter"
                                      filter="true"
                                      filterMatchMode="startsWith"
@@ -227,7 +227,7 @@
 
                     <p:outputLabel for="@next" value="House"/>
                     <p:selectOneMenu id="filterHouseSelect"
-                                     value="#{rentalView.filterHousePublicId}"
+                                     value="#{rentalView.rentalFilterRequest.housePublicId}"
                                      converter="uuidConverter"
                                      dynamic="true"
                                      filter="true"
@@ -241,8 +241,28 @@
                                        itemValue="#{house.publicId}"/>
                     </p:selectOneMenu>
 
+                    <p:outputLabel for="@next" value="Account Status"/>
+                    <p:selectOneMenu id="filterAccountStatus"
+                                     value="#{rentalView.rentalFilterRequest.accountStatus}"
+                                     style="width: 250px;">
+
+                        <f:selectItem itemLabel="Select Account Status" itemValue="" noSelectionOption="true"/>
+                        <f:selectItems value="#{rentalView.rentalAccountStatuses}" var="rentalAccountStatus"
+                                       itemValue="#{rentalAccountStatus}" itemLabel="#{rentalAccountStatus}"/>
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="@next" value="Arrear Status"/>
+                    <p:selectOneMenu id="filterArrerarsStatus"
+                                     value="#{rentalView.rentalFilterRequest.arrearStatus}"
+                                     style="width: 250px;">
+
+                        <f:selectItem itemLabel="Select Arrear Status" itemValue="" noSelectionOption="true"/>
+                        <f:selectItems value="#{rentalView.rentalArrearStatuses}" var="rentalArrearStatus"
+                                       itemValue="#{rentalArrearStatus}" itemLabel="#{rentalArrearStatus}"/>
+                    </p:selectOneMenu>
+
                     <p:outputLabel for="@next" value="Search"/>
-                    <p:inputText id="search" value="#{rentalView.searchParam}" size="33"/>
+                    <p:inputText id="search" value="#{rentalView.rentalFilterRequest.searchParam}" size="33"/>
 
                 </h:panelGrid>
                 <f:facet name="footer">
@@ -355,9 +375,24 @@
                                      actionListener="#{rentalView.closeAccount()}"
                                      update=":closeAccountForm:close-account-form-growl
                                      :closeAccountForm:closeAccountDlgPanel
-                                     :dataForm:recordsTable"/>
+                                     :dataForm:recordsTable">
+                        <p:confirm header="Confirmation" message="Are you sure you want to proceed?"
+                                   icon="pi pi-exclamation-triangle"/>
+                    </p:commandButton>
                 </f:facet>
             </p:dialog>
+            <p:confirmDialog global="true"
+                             showEffect="fade"
+                             hideEffect="fade"
+                             responsive="true"
+                             width="350">
+                <p:commandButton value="No" type="button"
+                                 styleClass="ui-confirmdialog-no ui-button-flat"
+                                 icon="pi pi-times" />
+                <p:commandButton value="Yes" type="button"
+                                 styleClass="ui-confirmdialog-yes"
+                                 icon="pi pi-check" />
+            </p:confirmDialog>
         </h:form>
 
     </ui:define>

@@ -5,10 +5,7 @@ import com.castle.property.datatype.Floor;
 import com.castle.property.datatype.HouseStatus;
 import com.castle.property.datatype.RentalAccountStatus;
 import com.castle.property.datatype.RentalArrearStatus;
-import com.castle.property.dto.HouseActionRequest;
-import com.castle.property.dto.PersonRequest;
-import com.castle.property.dto.RentalActionRequest;
-import com.castle.property.dto.RentalRequest;
+import com.castle.property.dto.*;
 import com.castle.property.entity.House;
 import com.castle.property.entity.Person;
 import com.castle.property.entity.Rental;
@@ -26,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +40,70 @@ public class RentalServiceImpl implements RentalService {
     private final HouseService houseService;
     private final PersonService personService;
     private final RentalRepository rentalRepository;
+
+    private List<Predicate> createPredicates(RentalFilterRequest rentalFilterRequest, CriteriaBuilder cb, Root<Rental> root) {
+        final List<Predicate> andPredicates = new ArrayList<>();
+
+        Predicate deletedPredicate = cb.equal(root.get("deleted"), Boolean.FALSE);
+
+        andPredicates.add(deletedPredicate);
+
+        if (rentalFilterRequest.getIdentificationNumber() != null && rentalFilterRequest.getIdentificationNumber().trim().length() >= 2) {
+            final List<Predicate> orPredicates = new ArrayList<>();
+            orPredicates.add(cb.like(cb.upper(root.get("person").get("identificationNumber")), "%" + rentalFilterRequest.getIdentificationNumber().toUpperCase() + "%"));
+
+            Predicate p = cb.or(orPredicates.toArray(new Predicate[orPredicates.size()]));
+            andPredicates.add(p);
+        }
+
+        if (rentalFilterRequest.getPropertyPublicId() != null) {
+            Predicate newPredicate = cb.equal(root.get("house").get("property").get("publicId"), rentalFilterRequest.getPropertyPublicId());
+            andPredicates.add(newPredicate);
+        }
+
+        if (rentalFilterRequest.getHousePublicId() != null) {
+            Predicate newPredicate = cb.equal(root.get("house").get("publicId"), rentalFilterRequest.getHousePublicId());
+            andPredicates.add(newPredicate);
+        }
+
+        if (rentalFilterRequest.getAccountStatus() != null) {
+            Predicate newPredicate = cb.equal(root.get("accountStatus"), rentalFilterRequest.getAccountStatus());
+            andPredicates.add(newPredicate);
+        }
+
+        if (rentalFilterRequest.getArrearStatus() != null) {
+            Predicate newPredicate = cb.equal(root.get("arrearStatus"), rentalFilterRequest.getArrearStatus());
+            andPredicates.add(newPredicate);
+        }
+
+        if (rentalFilterRequest.getPhoneNumber() != null && rentalFilterRequest.getPhoneNumber().trim().length() >= 2) {
+            final List<Predicate> orPredicates = new ArrayList<>();
+            orPredicates.add(cb.like(cb.upper(root.get("person").get("phoneNumber")), "%" + rentalFilterRequest.getPhoneNumber().toUpperCase() + "%"));
+
+            Predicate p = cb.or(orPredicates.toArray(new Predicate[orPredicates.size()]));
+            andPredicates.add(p);
+        }
+
+        if (rentalFilterRequest.getSearchParam() != null && rentalFilterRequest.getSearchParam().trim().length() >= 2) {
+            final List<Predicate> orPredicates = new ArrayList<>();
+            try {
+                Floor floor = Floor.forValue(rentalFilterRequest.getSearchParam());
+                orPredicates.add(cb.equal(root.get("house").get("location"), floor));
+            } catch (Exception e) {
+            }
+            orPredicates.add(cb.like(cb.upper(root.get("house").get("number")), "%" + rentalFilterRequest.getSearchParam().toUpperCase() + "%"));
+            orPredicates.add(cb.like(cb.upper(root.get("person").get("firstName")), "%" + rentalFilterRequest.getSearchParam().toUpperCase() + "%"));
+            orPredicates.add(cb.like(cb.upper(root.get("person").get("lastName")), "%" + rentalFilterRequest.getSearchParam().toUpperCase() + "%"));
+            orPredicates.add(cb.like(cb.upper(root.get("person").get("otherName")), "%" + rentalFilterRequest.getSearchParam().toUpperCase() + "%"));
+            orPredicates.add(cb.like(cb.upper(root.get("person").get("identificationNumber")), "%" + rentalFilterRequest.getSearchParam().toUpperCase() + "%"));
+            orPredicates.add(cb.like(cb.upper(root.get("person").get("nationality")), "%" + rentalFilterRequest.getSearchParam().toUpperCase() + "%"));
+            orPredicates.add(cb.like(cb.upper(root.get("person").get("phoneNumber")), "%" + rentalFilterRequest.getSearchParam().toUpperCase() + "%"));
+
+            Predicate p = cb.or(orPredicates.toArray(new Predicate[orPredicates.size()]));
+            andPredicates.add(p);
+        }
+        return andPredicates;
+    }
 
     @Override
     public Rental createRental(RentalRequest request) {
@@ -114,18 +174,8 @@ public class RentalServiceImpl implements RentalService {
     }
 
     @Override
-    public List<Rental> listRentals(String searchParam) {
-        return searchRentals(null, null, null, null, searchParam, PageRequest.of(0, Integer.MAX_VALUE)).getContent();
-    }
-
-    @Override
-    public Page<Rental> getRentals(String searchParam, UUID housePublicId, Pageable pageable) {
-        return searchRentals(null, housePublicId, null, null, searchParam, pageable);
-    }
-
-    @Override
-    public Page<Rental> searchRentals(UUID propertyPublicId, UUID housePublicId, String identificationNumber, String phoneNumber, String searchParam, Pageable pageable) {
-        log.info("start searchRentals {} {} {} {}", propertyPublicId, identificationNumber, phoneNumber, searchParam);
+    public Page<Rental> getRentals(RentalFilterRequest rentalFilterRequest, Pageable pageable) {
+        log.info("start getRentals {}", rentalFilterRequest.toString());
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Rental> mainQuery = cb.createQuery(Rental.class);
         Root<Rental> root = mainQuery.from(Rental.class);
@@ -135,8 +185,8 @@ public class RentalServiceImpl implements RentalService {
 
         mainQuery.distinct(true);
 
-        final List<Predicate> mainQueryPredicates = createPredicates(propertyPublicId, housePublicId, identificationNumber, phoneNumber, searchParam, cb, root);
-        final List<Predicate> countQueryPredicates = createPredicates(propertyPublicId, housePublicId, identificationNumber, phoneNumber, searchParam, cb, countRoot);
+        final List<Predicate> mainQueryPredicates = createPredicates(rentalFilterRequest, cb, root);
+        final List<Predicate> countQueryPredicates = createPredicates(rentalFilterRequest, cb, countRoot);
 
         mainQuery.where(mainQueryPredicates.toArray(new Predicate[mainQueryPredicates.size()])).orderBy(cb.desc(root.get("id")));
 
@@ -155,81 +205,24 @@ public class RentalServiceImpl implements RentalService {
         return new PageImpl<>(queryResultList, pageable, count);
     }
 
-    private List<Predicate> createPredicates(UUID propertyPublicId, UUID housePublicId, String identificationNumber, String phoneNumber, String searchParam, CriteriaBuilder cb, Root<Rental> root) {
-        final List<Predicate> andPredicates = new ArrayList<>();
-
-        Predicate deletedPredicate = cb.equal(root.get("deleted"), Boolean.FALSE);
-
-        andPredicates.add(deletedPredicate);
-
-        if (identificationNumber != null && identificationNumber.trim().length() >= 2) {
-            final List<Predicate> orPredicates = new ArrayList<>();
-            orPredicates.add(cb.like(cb.upper(root.get("person").get("identificationNumber")), "%" + searchParam.toUpperCase() + "%"));
-
-            Predicate p = cb.or(orPredicates.toArray(new Predicate[orPredicates.size()]));
-            andPredicates.add(p);
-        }
-        if (propertyPublicId != null) {
-            Predicate newPredicate = cb.equal(root.get("property").get("publicId"), propertyPublicId);
-            andPredicates.add(newPredicate);
-        }
-        if (housePublicId != null) {
-            Predicate newPredicate = cb.equal(root.get("house").get("publicId"), housePublicId);
-            andPredicates.add(newPredicate);
-        }
-
-        if (phoneNumber != null && phoneNumber.trim().length() >= 2) {
-            final List<Predicate> orPredicates = new ArrayList<>();
-            orPredicates.add(cb.like(cb.upper(root.get("person").get("phoneNumber")), "%" + searchParam.toUpperCase() + "%"));
-
-            Predicate p = cb.or(orPredicates.toArray(new Predicate[orPredicates.size()]));
-            andPredicates.add(p);
-        }
-
-        if (searchParam != null && searchParam.trim().length() >= 2) {
-            final List<Predicate> orPredicates = new ArrayList<>();
-            try {
-                Floor floor = Floor.forValue(searchParam);
-                orPredicates.add(cb.equal(root.get("house").get("location"), floor));
-            } catch (Exception e) {
-            }
-            orPredicates.add(cb.like(cb.upper(root.get("house").get("number")), "%" + searchParam.toUpperCase() + "%"));
-            orPredicates.add(cb.like(cb.upper(root.get("person").get("firstName")), "%" + searchParam.toUpperCase() + "%"));
-            orPredicates.add(cb.like(cb.upper(root.get("person").get("lastName")), "%" + searchParam.toUpperCase() + "%"));
-            orPredicates.add(cb.like(cb.upper(root.get("person").get("otherName")), "%" + searchParam.toUpperCase() + "%"));
-            orPredicates.add(cb.like(cb.upper(root.get("person").get("identificationNumber")), "%" + searchParam.toUpperCase() + "%"));
-            orPredicates.add(cb.like(cb.upper(root.get("person").get("nationality")), "%" + searchParam.toUpperCase() + "%"));
-            orPredicates.add(cb.like(cb.upper(root.get("person").get("phoneNumber")), "%" + searchParam.toUpperCase() + "%"));
-
-            Predicate p = cb.or(orPredicates.toArray(new Predicate[orPredicates.size()]));
-            andPredicates.add(p);
-        }
-        return andPredicates;
-    }
-
     @Override
     public Rental getRentalById(String rowKey) {
         return rentalRepository.findById(Long.parseLong(rowKey)).orElseThrow(() -> new ApplicationOperationException("operation.record.not.found"));
     }
 
     @Override
-    public Number getRentalsCount(String searchParam, UUID housePublicId) {
-        return searchRentalsCount(null, housePublicId, null, null, searchParam);
-    }
-
-    @Override
-    public Number searchRentalsCount(UUID propertyPublicId, UUID housePublicId, String identificationNumber, String phoneNumber, String searchParam) {
-
+    public Number getRentalsCount(RentalFilterRequest rentalFilterRequest) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
         CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
         Root<Rental> countRoot = countQuery.from(Rental.class);
 
-        final List<Predicate> countQueryPredicates = createPredicates(propertyPublicId, housePublicId, identificationNumber, phoneNumber, searchParam, cb, countRoot);
+        final List<Predicate> countQueryPredicates = createPredicates(rentalFilterRequest, cb, countRoot);
 
         countQuery.select(cb.count(countRoot));
         countQuery.where(countQueryPredicates.toArray(new Predicate[countQueryPredicates.size()]));
 
         return entityManager.createQuery(countQuery).getSingleResult();
     }
+
 }

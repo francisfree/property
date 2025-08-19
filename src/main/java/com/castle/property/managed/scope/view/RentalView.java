@@ -2,10 +2,11 @@ package com.castle.property.managed.scope.view;
 
 import com.castle.property.datatype.IdentificationType;
 import com.castle.property.datatype.RentalAccountStatus;
+import com.castle.property.datatype.RentalArrearStatus;
 import com.castle.property.dto.RentalActionRequest;
+import com.castle.property.dto.RentalFilterRequest;
 import com.castle.property.dto.RentalRequest;
 import com.castle.property.entity.House;
-import com.castle.property.entity.Person;
 import com.castle.property.entity.Property;
 import com.castle.property.entity.Rental;
 import com.castle.property.service.HouseService;
@@ -22,7 +23,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.primefaces.PrimeFaces;
 import org.primefaces.component.datatable.DataTable;
-import org.primefaces.event.MenuActionEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
@@ -32,9 +32,9 @@ import org.primefaces.model.menu.DefaultMenuModel;
 import org.primefaces.model.menu.MenuModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -46,22 +46,20 @@ import java.util.UUID;
 @ViewScoped
 public class RentalView implements Serializable {
     private LazyDataModel<Rental> rentals;
-    private List<Person> persons;
-    private List<Person> availablePersons;
     private List<House> houses;
     private List<House> filterHouses;
     private List<Property> properties;
+    private List<RentalAccountStatus> rentalAccountStatuses;
+    private List<RentalArrearStatus> rentalArrearStatuses;
+
     private UUID propertyPublicId;
-    private UUID filterPropertyPublicId;
-    private UUID filterHousePublicId;
     private Rental selectedRental;
-    private String searchParam;
     private int rowCount;
     private RentalRequest rentalRequest;
     private String inputDialogTitle;
     private String dialogButtonTitle;
     private RentalActionRequest rentalActionRequest;
-    private String updateComponents;
+    private RentalFilterRequest rentalFilterRequest;
 
     @Autowired
     private RentalService rentalService;
@@ -75,9 +73,6 @@ public class RentalView implements Serializable {
     @PostConstruct
     public void init() {
         clear();
-        setPersons(personService.listPersons(null));
-        setHouses(houseService.listHouses(null));
-        setProperties(houseService.listProperties());
     }
 
     public void filter() {
@@ -94,12 +89,12 @@ public class RentalView implements Serializable {
 
             @Override
             public int count(Map<String, FilterMeta> map) {
-                return rentalService.getRentalsCount(getSearchParam(), getFilterHousePublicId()).intValue();
+                return rentalService.getRentalsCount(getRentalFilterRequest()).intValue();
             }
 
             @Override
             public List<Rental> load(int first, int pageSize, Map<String, SortMeta> map, Map<String, FilterMeta> filterMetaMap) {
-                return rentalService.getRentals(getSearchParam(), getFilterHousePublicId(), PageRequest.of((first / pageSize), pageSize)).getContent();
+                return rentalService.getRentals(getRentalFilterRequest(), PageRequest.of((first / pageSize), pageSize)).getContent();
             }
         };
         DataTable dataTable = (DataTable) FacesContext.getCurrentInstance().getViewRoot().findComponent("dataForm:recordsTable");
@@ -107,23 +102,30 @@ public class RentalView implements Serializable {
     }
 
     public void clear() {
-        setSearchParam(null);
         setPropertyPublicId(null);
-        setRentalRequest(new RentalRequest());
-        setInputDialogTitle("New Rental");
-        setDialogButtonTitle("New");
-        setHouses(null);
         setPropertyPublicId(null);
         setFilterHouses(null);
-        setFilterPropertyPublicId(null);
-        setFilterHousePublicId(null);
         setSelectedRental(null);
+        setInputDialogTitle("New Rental");
+        setDialogButtonTitle("New");
+        setRentalRequest(new RentalRequest());
         setRentalActionRequest(new RentalActionRequest());
+        setRentalFilterRequest(new RentalFilterRequest());
+        setHouses(houseService.listHouses(null));
+        setProperties(houseService.listProperties());
         filter();
     }
 
     public IdentificationType[] getIdentificationTypes() {
         return IdentificationType.values();
+    }
+
+    public List<RentalAccountStatus> getRentalAccountStatuses() {
+        return Arrays.asList(RentalAccountStatus.values());
+    }
+
+    public List<RentalArrearStatus> getRentalArrearStatuses() {
+        return Arrays.asList(RentalArrearStatus.values());
     }
 
     public void onRowSelect(SelectEvent<Rental> event) {
@@ -143,19 +145,11 @@ public class RentalView implements Serializable {
     }
 
     public void onFilterPropertyChange() {
-        UUID newPropertyPublicId = getFilterPropertyPublicId();
-        log.info("present {}", newPropertyPublicId != null);
-        if (newPropertyPublicId != null) {
-            setFilterHouses(houseService.listHouses(newPropertyPublicId));
+        if (rentalFilterRequest.getPropertyPublicId() != null) {
+            setFilterHouses(houseService.listHouses(rentalFilterRequest.getPropertyPublicId()));
         } else {
             setFilterHouses(houseService.listHouses(null));
         }
-    }
-
-    public List<Person> searchPersons(String query) {
-        List<Person> personList = personService.getPersons(query, Pageable.ofSize(20)).getContent();
-        setAvailablePersons(personList);
-        return personList;
     }
 
     public void onItemSelect(SelectEvent<String> event) {
@@ -255,21 +249,21 @@ public class RentalView implements Serializable {
 
         // View action
         DefaultMenuItem viewItem = DefaultMenuItem.builder()
-                .value("View")
+                .value("Rental Payment")
                 .icon("pi pi-eye")
                 .command("#{rentalView.delete}")
                 .build();
         model.getElements().add(viewItem);
 
-        // Change Amount action
-        DefaultMenuItem changeAmountMenuItem = DefaultMenuItem.builder()
-                .value("Change Amount")
-                .icon("pi pi-pencil")
-                .onclick("PF('change-amount-dlg').show()")
-                .build();
-        model.getElements().add(changeAmountMenuItem);
-
         if (item.getAccountStatus() == RentalAccountStatus.Active) {
+            // Change Amount action
+            DefaultMenuItem changeAmountMenuItem = DefaultMenuItem.builder()
+                    .value("Change Amount")
+                    .icon("pi pi-pencil")
+                    .onclick("PF('change-amount-dlg').show()")
+                    .build();
+            model.getElements().add(changeAmountMenuItem);
+
             DefaultMenuItem closeAccountMenuItem = DefaultMenuItem.builder()
                     .value("Close Account")
                     .icon("pi pi-times-circle")

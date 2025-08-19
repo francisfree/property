@@ -2,15 +2,15 @@ package com.castle.property.service;
 
 import com.castle.property.PropertyApplicationTests;
 import com.castle.property.datatype.IdentificationType;
-import com.castle.property.dto.PersonRequest;
+import com.castle.property.dto.RentalFilterRequest;
 import com.castle.property.dto.RentalRequest;
-import com.castle.property.entity.Person;
 import com.castle.property.entity.Rental;
 import com.github.javafaker.Faker;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -76,17 +76,12 @@ public class RentalServiceTests extends PropertyApplicationTests {
     }
 
     @Test
-    public void listRentalsWorks() {
-        List<Rental> rentals = rentalService.listRentals(null);
-        MatcherAssert.assertThat(rentals.size(), greaterThanOrEqualTo(1));
-    }
-
-    @Test
     public void searchRentalWorks() {
-        String searchParam = "1B";
-        List<Rental> rentals = rentalService.listRentals(searchParam);
+        RentalFilterRequest rentalFilterRequest = new RentalFilterRequest();
+        rentalFilterRequest.setSearchParam("1B");
+        List<Rental> rentals = rentalService.getRentals(rentalFilterRequest, PageRequest.of(0, 10)).getContent();
         MatcherAssert.assertThat(rentals.size(), greaterThanOrEqualTo(1));
-        MatcherAssert.assertThat(rentals.get(0).getHouse().getNumber(), containsStringIgnoringCase(searchParam));
+        MatcherAssert.assertThat(rentals.get(0).getHouse().getNumber(), containsStringIgnoringCase(rentalFilterRequest.getSearchParam()));
     }
 
 

@@ -11,8 +11,8 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @Getter
-@ToString
 @Setter
+@ToString
 public class RentalRequest {
     @NotBlank
     @Size(max = 250)
