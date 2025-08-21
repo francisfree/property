@@ -2,10 +2,8 @@ package com.castle.property.service;
 
 import com.castle.property.dto.HouseActionRequest;
 import com.castle.property.dto.HouseRequest;
-import com.castle.property.dto.RentalActionRequest;
 import com.castle.property.entity.House;
 import com.castle.property.entity.Property;
-import com.castle.property.entity.Rental;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;

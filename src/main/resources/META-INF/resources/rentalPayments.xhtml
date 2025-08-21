@@ -1,0 +1,343 @@
+<?xml version="1.0"  encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:pe="http://primefaces.org/ui/extensions"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:o="http://omnifaces.org/ui"
+      xmlns:of="http://omnifaces.org/functions">
+
+<ui:composition template="templates/mainLayout.xhtml">
+    <ui:define name="centerContent">
+        <h:form id="dataForm">
+            <div class="card">
+                <p:dataTable id="recordsTable" var="rentalPayment" tableStyle="table-layout:auto"
+                             resizableColumns="true" resizeMode="expand" value="#{rentalPaymentView.rentalPayments}"
+                             rows="25" lazy="true" paginator="true" paginatorPosition="bottom"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             currentPageReportTemplate="{startRecord}-{endRecord} of {totalRecords} records"
+                             rowsPerPageTemplate="5,10,25,{ShowAll|'All'}"
+                             selection="#{rentalPaymentView.selectedPaymentRental}" selectionMode="single">
+                    <f:facet name="header">
+                        <div class="flex justify-content-between align-items-center">
+                            Rental Payments
+                            <h:panelGroup id="headerPanel">
+
+                                <p:commandButton value="Filter" onclick="PF('filter-dlg').show()"
+                                                 style="padding-right: 5px; margin-left:10px;"/>
+                                <p:commandButton value="Clear" actionListener="#{rentalPaymentView.clear()}"
+                                                 update=":dataForm:headerPanel :dataForm:recordsTable :inputForm"
+                                                 style="padding-right: 5px; margin-left:10px;"/>
+
+                                <p:commandButton id="dlgBtn" value="#{rentalPaymentView.dialogButtonTitle}"
+                                                 icon="pi pi-external-link" onclick="PF('dlg').show()"
+                                                 style="padding-right: 5px; margin-left:10px;"/>
+                                <p:commandButton id="toggler" type="button" value="Columns" icon="pi pi-align-justify"
+                                                 style="padding-right: 5px; margin-left:10px;"/>
+                                <p:columnToggler datasource="recordsTable" trigger="toggler"/>
+                            </h:panelGroup>
+                        </div>
+                    </f:facet>
+
+                    <p:ajax event="rowSelect" listener="#{rentalPaymentView.onRowSelect}"
+                            update=":dataForm:recordsTable :dataForm:recordsTable:headerPanel
+                            inputForm:inputDlgPanel
+                            viewMoreForm:viewMoreDlg"/>
+
+                    <p:column headerText="Payment Date">
+                        <h:outputText value="#{rentalPayment.paymentDate}">
+                            <f:convertDateTime type="localDate" pattern="dd-MM-yyyy"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="Payment Month">
+                        <h:outputText value="#{rentalPayment.paymentMonth}"/>
+                    </p:column>
+
+                    <p:column headerText="Amount (KSh)" style="text-align: right;">
+                        <h:outputText value="#{rentalPayment.amount}">
+                            <f:convertNumber type="currency" currencySymbol=" "/>
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="Payment Mode">
+                        <h:outputText value="#{rentalPayment.paymentMode}"/>
+                    </p:column>
+
+                    <p:column headerText="Property">
+                        <h:outputText value="#{rentalPayment.rental.house.property.name}"/>
+                    </p:column>
+
+                    <p:column headerText="Floor">
+                        <h:outputText value="#{rentalPayment.rental.house.floor.label}"/>
+                    </p:column>
+
+                    <p:column headerText="House Number">
+                        <h:outputText value="#{rentalPayment.rental.house.number}"/>
+                    </p:column>
+
+                    <p:column headerText="First Name">
+                        <h:outputText value="#{rentalPayment.rental.person.firstName}"/>
+                    </p:column>
+
+                    <p:column headerText="Last Name">
+                        <h:outputText value="#{rentalPayment.rental.person.lastName}"/>
+                    </p:column>
+
+                    <p:column headerText="Other Name">
+                        <h:outputText value="#{rentalPayment.rental.person.otherName}"/>
+                    </p:column>
+
+                    <p:column headerText="Phone Number">
+                        <h:outputText value="#{rentalPayment.rental.person.phoneNumber}"/>
+                    </p:column>
+
+                    <p:column headerText="Actions" width="80" style="text-align: center;">
+                        <p:menuButton model="#{rentalPaymentView.getMenuModel(rentalPayment)}"
+                                      styleClass="ui-button-icon-only ui-button-rounded ui-button-outlined"
+                                      icon="pi pi-ellipsis-v"
+                                      title="Actions">
+                        </p:menuButton>
+                    </p:column>
+                </p:dataTable>
+            </div>
+            <p:growl id="messages" showDetail="true"/>
+        </h:form>
+
+        <h:form id="inputForm">
+            <p:growl id="input-form-growl" for="sticky-key" showDetail="true" sticky="true"/>
+            <p:dialog id="inputDlg" header="#{rentalPaymentView.inputDialogTitle}" widgetVar="dlg" modal="false">
+                <h:panelGrid id="inputDlgPanel" columns="3" cellpadding="7">
+                    <p:outputLabel for="@next" value="Property"/>
+                    <p:selectOneMenu id="propertySelect"
+                                     value="#{rentalPaymentView.propertyPublicId}"
+                                     converter="uuidConverter"
+                                     filter="true"
+                                     filterMatchMode="startsWith"
+                                     filterPlaceholder="Search property..."
+                                     style="width: 250px;">
+                        <f:selectItem itemLabel="Select Property" itemValue="" noSelectionOption="true"/>
+                        <f:selectItems value="#{rentalPaymentView.properties}"
+                                       var="property"
+                                       itemLabel="#{property.name} - #{property.area}"
+                                       itemValue="#{property.publicId}"/>
+
+                        <p:ajax event="valueChange"
+                                listener="#{rentalPaymentView.onPropertyChange}"
+                                update=":inputForm:inputDlgPanel"/>
+                    </p:selectOneMenu>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Rental"/>
+                    <p:selectOneMenu id="rentalSelect"
+                                     value="#{rentalPaymentView.rentalPaymentRequest.rentalPublicId}"
+                                     converter="uuidConverter"
+                                     dynamic="true"
+                                     filter="true"
+                                     filterMatchMode="startsWith"
+                                     filterPlaceholder="Search houses..."
+                                     style="width: 250px;">
+                        <f:selectItem itemLabel="Select House" itemValue="" noSelectionOption="true"/>
+                        <f:selectItems value="#{rentalPaymentView.rentals}"
+                                       var="rental"
+                                       itemLabel="#{rental.house.number} - #{rental.house.floor}"
+                                       itemValue="#{rental.publicId}"/>
+                    </p:selectOneMenu>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Amount"/>
+                    <p:inputNumber value="#{rentalPaymentView.rentalPaymentRequest.amount}" label="Amount" decimalPlaces="2"
+                                   size="33"/>
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Payment Month"/>
+                    <p:datePicker value="#{rentalPaymentView.rentalPaymentRequest.paymentMonth}"
+                                  view="month"
+                                  yearNavigator="true"
+                                  yearRange="2020:2030"
+                                  pattern="yyyy-MMMM" />
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Payment Date"/>
+                    <p:datePicker value="#{rentalPaymentView.rentalPaymentRequest.paymentDate}"
+                                  yearNavigator="true"
+                                  monthNavigator="true"
+                                  yearRange="2020:2030"
+                                  pattern="yyyy-MM-dd"
+                                  mask="####-##-##" />
+                    <p:message for="@previous"/>
+
+                    <p:outputLabel for="@next" value="Payment Mode"/>
+                    <p:selectOneMenu value="#{rentalPaymentView.rentalPaymentRequest.paymentMode}" style="width: 250px;">
+                        <f:selectItems value="#{rentalPaymentView.paymentModes}" var="paymentMode"
+                                       itemValue="#{paymentMode}"
+                                       itemLabel="#{paymentMode}"/>
+                    </p:selectOneMenu>
+                    <p:message for="@previous"/>
+
+
+                    <p:outputLabel for="@next" value="Payment Message"/>
+                    <p:inputText value="#{rentalPaymentView.rentalPaymentRequest.message}" label="Payment Message"
+                                   size="33"/>
+                    <p:message for="@previous"/>
+
+                </h:panelGrid>
+                <f:facet name="footer">
+                    <p:commandButton value="Cancel" styleClass="ui-button-flat mr-2" style="width: 6rem"
+                                     onclick="PF('dlg').hide()"/>
+                    <p:commandButton id="btnSave" value="Save" style="width: 5rem"
+                                     ajax="true"
+                                     actionListener="#{rentalPaymentView.saveRentalPayment()}"
+                                     update=":inputForm:inputDlgPanel :dataForm:recordsTable :inputForm:input-form-growl"/>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+
+        <h:form id="filterForm">
+            <p:growl id="filter-form-growl" for="sticky-key" showDetail="true" sticky="true"/>
+            <p:dialog id="filterDlg" header="Filter" widgetVar="filter-dlg" modal="false">
+                <h:panelGrid id="filterDlgPanel" layout="flex" columns="2" cellpadding="7">
+                    <p:outputLabel for="@next" value="Property"/>
+                    <p:selectOneMenu id="filterPropertySelect"
+                                     value="#{rentalPaymentView.rentalPaymentFilterRequest.propertyPublicId}"
+                                     converter="uuidConverter"
+                                     filter="true"
+                                     filterMatchMode="startsWith"
+                                     filterPlaceholder="Search property..."
+                                     style="width: 250px;">
+                        <f:selectItem itemLabel="Select Property" itemValue="" noSelectionOption="true"/>
+                        <f:selectItems value="#{rentalPaymentView.properties}"
+                                       var="property"
+                                       itemLabel="#{property.name} - #{property.area}"
+                                       itemValue="#{property.publicId}"/>
+
+                        <p:ajax event="valueChange"
+                                listener="#{rentalPaymentView.onFilterPropertyChange()}"
+                                update=":filterForm:filterDlgPanel"/>
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="@next" value="House"/>
+                    <p:selectOneMenu id="filterHouseSelect"
+                                     value="#{rentalPaymentView.rentalPaymentFilterRequest.housePublicId}"
+                                     converter="uuidConverter"
+                                     dynamic="true"
+                                     filter="true"
+                                     filterMatchMode="startsWith"
+                                     filterPlaceholder="Search houses..."
+                                     style="width: 250px;">
+                        <f:selectItem itemLabel="Select House" itemValue="" noSelectionOption="true"/>
+                        <f:selectItems value="#{rentalPaymentView.filterRentals}"
+                                       var="rental"
+                                       itemLabel="#{rental.house.number} - #{rental.house.floor}"
+                                       itemValue="#{rental.house.publicId}"/>
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="@next" value="Payment Month"/>
+                    <p:datePicker value="#{rentalPaymentView.rentalPaymentFilterRequest.paymentMonth}"
+                                  view="month"
+                                  yearNavigator="true"
+                                  yearRange="2020:2030"
+                                  pattern="yyyy-MMMM" />
+
+                    <p:outputLabel for="@next" value="Payment Date"/>
+                    <p:datePicker value="#{rentalPaymentView.rentalPaymentFilterRequest.paymentDates}"
+                                  selectionMode="range"
+                                  readonlyInput="true"
+                                  yearRange="2020:2030"/>
+
+                    <p:outputLabel for="@next" value="Payment Mode"/>
+                    <p:selectOneMenu value="#{rentalPaymentView.rentalPaymentFilterRequest.paymentMode}" style="width: 250px;">
+                        <f:selectItem itemLabel="Select Payment Mode" itemValue="" noSelectionOption="true"/>
+                        <f:selectItems value="#{rentalPaymentView.paymentModes}" var="paymentMode"
+                                       itemValue="#{paymentMode}"
+                                       itemLabel="#{paymentMode}"/>
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="@next" value="Search"/>
+                    <p:inputText id="search" value="#{rentalPaymentView.rentalPaymentFilterRequest.searchParam}" size="33"/>
+
+                </h:panelGrid>
+                <f:facet name="footer">
+                    <p:commandButton value="Cancel" styleClass="ui-button-flat mr-2" style="width: 6rem"
+                                     onclick="PF('filter-dlg').hide()"/>
+                    <p:commandButton id="btnFilter" value="Filter" style="width: 5rem"
+                                     ajax="true"
+                                     actionListener="#{rentalPaymentView.filter()}"
+                                     update=":filterForm:filterDlgPanel :dataForm:recordsTable :filterForm:filter-form-growl"/>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+
+        <h:form id="viewMoreForm">
+            <p:growl id="view-more-form-growl" for="sticky-key" showDetail="true" sticky="true"/>
+            <p:dialog id="viewMoreDlg" header="View More" widgetVar="view-more-dlg" modal="false">
+                <h:panelGrid id="viewMoreDlgPanel" columns="2" cellpadding="7" rendered="#{rentalPaymentView.selectedPaymentRental != null}">
+
+                    <p:outputLabel for="@next" value="Payment Date"/>
+                    <h:outputText value="#{rentalPaymentView.selectedPaymentRental.paymentDate}">
+                        <f:convertDateTime type="localDate" pattern="dd-MM-yyyy"/>
+                    </h:outputText>
+
+                    <p:outputLabel for="@next" value="Payment Month"/>
+                    <p:outputLabel value="#{rentalPaymentView.selectedPaymentRental.paymentMonth}"/>
+
+                    <p:outputLabel for="@next" value="Amount"/>
+                    <h:outputText value="#{rentalPaymentView.selectedPaymentRental.amount}">
+                        <f:convertNumber type="currency" currencySymbol="KSh "/>
+                    </h:outputText>
+
+                    <p:outputLabel for="@next" value="Payment Mode"/>
+                    <p:outputLabel value="#{rentalPaymentView.selectedPaymentRental.paymentMode}"/>
+
+                    <p:outputLabel for="@next" value="Payment Message"/>
+                    <p:outputLabel value="#{rentalPaymentView.selectedPaymentRental.paymentMessage}"/>
+
+                    <p:outputLabel for="@next" value="First Name"/>
+                    <p:outputLabel value="#{rentalPaymentView.selectedPaymentRental.rental.person.firstName}"/>
+
+                    <p:outputLabel for="@next" value="Last Name"/>
+                    <p:outputLabel value="#{rentalPaymentView.selectedPaymentRental.rental.person.lastName}"/>
+
+                    <p:outputLabel for="@next" value="Other Name"/>
+                    <p:outputLabel value="#{rentalPaymentView.selectedPaymentRental.rental.person.otherName}"/>
+
+                    <p:outputLabel for="@next" value="Phone Number"/>
+                    <p:outputLabel value="#{rentalPaymentView.selectedPaymentRental.rental.person.phoneNumber}"/>
+
+                    <p:outputLabel for="@next" value="Property"/>
+                    <p:outputLabel value="#{rentalPaymentView.selectedPaymentRental.rental.house.property.name}"/>
+
+                    <p:outputLabel for="@next" value="House Floor"/>
+                    <p:outputLabel value="#{rentalPaymentView.selectedPaymentRental.rental.house.floor}"/>
+
+                    <p:outputLabel for="@next" value="House Number"/>
+                    <p:outputLabel value="#{rentalPaymentView.selectedPaymentRental.rental.house.number}"/>
+
+                </h:panelGrid>
+                <p:staticMessage
+                        severity="warn"
+                        summary=""
+                        detail="Please select row first"
+                        style="width: 85%;" rendered="#{rentalPaymentView.selectedPaymentRental == null}"/>
+                <f:facet name="footer">
+                    <p:commandButton value="Cancel" styleClass="ui-button-flat mr-2" style="width: 6rem"
+                                     rendered="#{rentalPaymentView.selectedPaymentRental != null}"
+                                     onclick="PF('view-more-dlg').hide()"/>
+
+                    <p:commandButton value="Close" style="width: 11rem"
+                                     ajax="true" rendered="#{rentalPaymentView.selectedPaymentRental != null}"
+                                     actionListener="#{rentalPaymentView.closeViewMore()}"
+                                     update=":viewMoreForm:view-more-form-growl
+                                     :viewMoreForm:viewMoreDlgPanel
+                                     :dataForm:recordsTable">
+                    </p:commandButton>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+
+    </ui:define>
+</ui:composition>
+
+</html>

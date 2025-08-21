@@ -31,6 +31,9 @@ public class RentalPayment extends AbstractAuditableActivityEntity {
     @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate paymentDate;
 
+    @Column(name = "payment_month")
+    private String paymentMonth;
+
     @Column(name = "amount")
     private BigDecimal amount;
 

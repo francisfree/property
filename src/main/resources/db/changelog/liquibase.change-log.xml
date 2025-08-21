@@ -182,4 +182,15 @@
         <renameColumn tableName="rentals" oldColumnName="status" newColumnName="arrears_status"/>
     </changeSet>
 
+    <changeSet id="202250401 10:10" author="francis">
+        <preConditions>
+            <not>
+                <columnExists tableName="rental_payments" columnName="payment_month"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="rental_payments">
+            <column name="payment_month" type="varchar(250)"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

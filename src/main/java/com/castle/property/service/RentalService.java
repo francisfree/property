@@ -1,5 +1,6 @@
 package com.castle.property.service;
 
+import com.castle.property.datatype.RentalAccountStatus;
 import com.castle.property.dto.RentalActionRequest;
 import com.castle.property.dto.RentalFilterRequest;
 import com.castle.property.dto.RentalRequest;
@@ -9,6 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface RentalService {
@@ -24,4 +26,5 @@ public interface RentalService {
 
     Number getRentalsCount(RentalFilterRequest rentalFilterRequest);
 
+    List<Rental> getRentalsByPropertyAndRentalAccountStatus(UUID propertyPublicId, RentalAccountStatus rentalAccountStatus);
 }

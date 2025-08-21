@@ -25,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
+@Validated
 @RequiredArgsConstructor
 public class RentalServiceImpl implements RentalService {
     @PersistenceContext
@@ -86,12 +88,6 @@ public class RentalServiceImpl implements RentalService {
 
         if (rentalFilterRequest.getSearchParam() != null && rentalFilterRequest.getSearchParam().trim().length() >= 2) {
             final List<Predicate> orPredicates = new ArrayList<>();
-            try {
-                Floor floor = Floor.forValue(rentalFilterRequest.getSearchParam());
-                orPredicates.add(cb.equal(root.get("house").get("location"), floor));
-            } catch (Exception e) {
-            }
-            orPredicates.add(cb.like(cb.upper(root.get("house").get("number")), "%" + rentalFilterRequest.getSearchParam().toUpperCase() + "%"));
             orPredicates.add(cb.like(cb.upper(root.get("person").get("firstName")), "%" + rentalFilterRequest.getSearchParam().toUpperCase() + "%"));
             orPredicates.add(cb.like(cb.upper(root.get("person").get("lastName")), "%" + rentalFilterRequest.getSearchParam().toUpperCase() + "%"));
             orPredicates.add(cb.like(cb.upper(root.get("person").get("otherName")), "%" + rentalFilterRequest.getSearchParam().toUpperCase() + "%"));
@@ -175,7 +171,6 @@ public class RentalServiceImpl implements RentalService {
 
     @Override
     public Page<Rental> getRentals(RentalFilterRequest rentalFilterRequest, Pageable pageable) {
-        log.info("start getRentals {}", rentalFilterRequest.toString());
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Rental> mainQuery = cb.createQuery(Rental.class);
         Root<Rental> root = mainQuery.from(Rental.class);
@@ -200,8 +195,6 @@ public class RentalServiceImpl implements RentalService {
         countQuery.where(countQueryPredicates.toArray(new Predicate[countQueryPredicates.size()]));
         Long count = entityManager.createQuery(countQuery).getSingleResult();
 
-        log.info("end searchRentals found {}", queryResultList.size());
-
         return new PageImpl<>(queryResultList, pageable, count);
     }
 
@@ -225,4 +218,8 @@ public class RentalServiceImpl implements RentalService {
         return entityManager.createQuery(countQuery).getSingleResult();
     }
 
+    @Override
+    public List<Rental> getRentalsByPropertyAndRentalAccountStatus(UUID propertyPublicId, RentalAccountStatus rentalAccountStatus) {
+        return rentalRepository.findByPropertyPublicIdAndRentalAccountStatus(propertyPublicId, rentalAccountStatus);
+    }
 }

@@ -49,8 +49,6 @@ public class RentalView implements Serializable {
     private List<House> houses;
     private List<House> filterHouses;
     private List<Property> properties;
-    private List<RentalAccountStatus> rentalAccountStatuses;
-    private List<RentalArrearStatus> rentalArrearStatuses;
 
     private UUID propertyPublicId;
     private Rental selectedRental;
