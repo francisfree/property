@@ -13,6 +13,7 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Getter
 @Setter
@@ -32,7 +33,10 @@ public class RentalPayment extends AbstractAuditableActivityEntity {
     private LocalDate paymentDate;
 
     @Column(name = "payment_month")
-    private String paymentMonth;
+    @JsonFormat(pattern = "yyyy-MMMM", shape = JsonFormat.Shape.STRING)
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonSerialize(using = LocalDateSerializer.class)
+    private LocalDate paymentMonth;
 
     @Column(name = "amount")
     private BigDecimal amount;
@@ -43,4 +47,11 @@ public class RentalPayment extends AbstractAuditableActivityEntity {
 
     @Column(name = "payment_message")
     private String paymentMessage;
+
+    @Transient
+    private String strPaymentMonth;
+
+    public String getStrPaymentMonth() {
+        return strPaymentMonth.formatted(DateTimeFormatter.ofPattern("yyyy-MMMM"));
+    }
 }

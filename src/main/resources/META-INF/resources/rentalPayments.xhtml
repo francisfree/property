@@ -43,8 +43,8 @@
 
                     <p:ajax event="rowSelect" listener="#{rentalPaymentView.onRowSelect}"
                             update=":dataForm:recordsTable :dataForm:recordsTable:headerPanel
-                            inputForm:inputDlgPanel
-                            viewMoreForm:viewMoreDlg"/>
+                            :inputForm:inputDlgPanel
+                            :viewMoreForm:viewMoreDlg"/>
 
                     <p:column headerText="Payment Date">
                         <h:outputText value="#{rentalPayment.paymentDate}">
@@ -53,7 +53,9 @@
                     </p:column>
 
                     <p:column headerText="Payment Month">
-                        <h:outputText value="#{rentalPayment.paymentMonth}"/>
+                        <h:outputText value="#{rentalPayment.paymentMonth}">
+                            <f:convertDateTime type="localDate" pattern="yyyy-MMMM"/>
+                        </h:outputText>
                     </p:column>
 
                     <p:column headerText="Amount (KSh)" style="text-align: right;">
@@ -124,7 +126,7 @@
                                        itemLabel="#{property.name} - #{property.area}"
                                        itemValue="#{property.publicId}"/>
 
-                        <p:ajax event="valueChange"
+                        <p:ajax event="change"
                                 listener="#{rentalPaymentView.onPropertyChange}"
                                 update=":inputForm:inputDlgPanel"/>
                     </p:selectOneMenu>
@@ -213,7 +215,7 @@
                                        itemLabel="#{property.name} - #{property.area}"
                                        itemValue="#{property.publicId}"/>
 
-                        <p:ajax event="valueChange"
+                        <p:ajax event="change"
                                 listener="#{rentalPaymentView.onFilterPropertyChange()}"
                                 update=":filterForm:filterDlgPanel"/>
                     </p:selectOneMenu>
@@ -329,6 +331,7 @@
                     <p:commandButton value="Close" style="width: 11rem"
                                      ajax="true" rendered="#{rentalPaymentView.selectedPaymentRental != null}"
                                      actionListener="#{rentalPaymentView.closeViewMore()}"
+                                     oncomplete="PF('view-more-dlg').hide()"
                                      update=":viewMoreForm:view-more-form-growl
                                      :viewMoreForm:viewMoreDlgPanel
                                      :dataForm:recordsTable">

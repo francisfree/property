@@ -27,6 +27,8 @@ public class RentalPaymentRequest {
     private LocalDate paymentDate;
 
     @NotNull(message = "missing amount")
+    @DecimalMin(value = "1.00", message = "amount must be greater than 1")
+    @Digits(integer = 11, fraction = 2)
     private BigDecimal amount;
 
     @Size(max = 250)

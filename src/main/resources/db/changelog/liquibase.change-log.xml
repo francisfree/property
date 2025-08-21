@@ -193,4 +193,11 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="202250401 10:11" author="francis">
+        <preConditions>
+            <columnExists tableName="rental_payments" columnName="payment_month"/>
+        </preConditions>
+        <modifyDataType tableName="rental_payments" columnName="payment_month" newDataType="date"/>
+    </changeSet>
+
 </databaseChangeLog>

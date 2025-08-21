@@ -29,4 +29,4 @@ insert into persons (created_by,date_created,date_modified,deleted,first_name,id
 
 insert into rentals (amount,created_by,date_created,date_modified,deleted,house_id,modified_by,person_id,public_id,account_status, arrears_status,id) values (2000, null, now(), now(), false, 1034, null, 1065, '0deccb69-3904-4687-8006-53525d82b4a3', 'Active', 'None', 1090);
 
-insert into rental_payments (amount,created_by,date_created,date_modified,deleted,modified_by,payment_date,payment_message,payment_mode,payment_month,public_id,rental_id,id) values (1500, null, now(), now(), false, null, '2024-07-06', null, 'Cash', '2024-July', 'debbe642-d3e3-468a-acab-1e528d236eec', 1090, 1200);
+insert into rental_payments (amount,created_by,date_created,date_modified,deleted,modified_by,payment_date,payment_message,payment_mode,payment_month,public_id,rental_id,id) values (1500, null, now(), now(), false, null, '2024-07-06', null, 'Cash', '2024-07-01', 'debbe642-d3e3-468a-acab-1e528d236eec', 1090, 1200);

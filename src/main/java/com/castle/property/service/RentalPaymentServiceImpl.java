@@ -25,7 +25,7 @@ import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -40,10 +40,6 @@ public class RentalPaymentServiceImpl implements RentalPaymentService {
     private EntityManager entityManager;
     private final RentalService rentalService;
     private final RentalPaymentRepository rentalPaymentRepository;
-
-    private String convertPaymentMonthString(LocalDate paymentMonth) {
-        return paymentMonth.format(DateTimeFormatter.ofPattern("yyyy-MMMM"));
-    }
 
     private List<Predicate> createPredicates(RentalPaymentFilterRequest rentalPaymentFilterRequest, CriteriaBuilder cb, Root<RentalPayment> root) {
         final List<Predicate> andPredicates = new ArrayList<>();
@@ -63,7 +59,7 @@ public class RentalPaymentServiceImpl implements RentalPaymentService {
         }
 
         if (rentalPaymentFilterRequest.getRentalPublicId() != null) {
-            Predicate newPredicate = cb.equal(root.get("rental").get("publicId"), rentalPaymentFilterRequest.getHousePublicId());
+            Predicate newPredicate = cb.equal(root.get("rental").get("publicId"), rentalPaymentFilterRequest.getRentalPublicId());
             andPredicates.add(newPredicate);
         }
 
@@ -73,7 +69,7 @@ public class RentalPaymentServiceImpl implements RentalPaymentService {
         }
 
         if (rentalPaymentFilterRequest.getPaymentMonth() != null) {
-            Predicate newPredicate = cb.equal(root.get("paymentMonth"), convertPaymentMonthString(rentalPaymentFilterRequest.getPaymentMonth()));
+            Predicate newPredicate = cb.equal(root.get("paymentMonth"), rentalPaymentFilterRequest.getPaymentMonth().with(TemporalAdjusters.firstDayOfMonth()));
             andPredicates.add(newPredicate);
         }
 
@@ -95,9 +91,9 @@ public class RentalPaymentServiceImpl implements RentalPaymentService {
     @Override
     public RentalPayment createRentalPayment(@Valid RentalPaymentRequest request) {
         Rental rental = rentalService.getRental(request.getRentalPublicId());
-        String paymentMonth = convertPaymentMonthString(request.getPaymentMonth());
+        LocalDate paymentMonth = request.getPaymentMonth().with(TemporalAdjusters.firstDayOfMonth());
 
-        BigDecimal balance = getRentalBalance(rental.getPublicId(), request.getPaymentMonth());
+        BigDecimal balance = getRentalBalance(rental.getPublicId(), paymentMonth);
 
         if (request.getAmount().compareTo(balance) > 0) {
             throw new ApplicationOperationException("rental.payment.amount.greater.than.balance");
@@ -117,8 +113,7 @@ public class RentalPaymentServiceImpl implements RentalPaymentService {
     @Override
     public BigDecimal getRentalBalance(UUID rentalPaymentPublicId, LocalDate paymentMonth) {
         Rental rental = rentalService.getRental(rentalPaymentPublicId);
-        String strPaymentMonth = convertPaymentMonthString(paymentMonth);
-        List<RentalPayment> rentalPayments = rentalPaymentRepository.findByRentalAndPaymentMonth(rental, strPaymentMonth);
+        List<RentalPayment> rentalPayments = rentalPaymentRepository.findByRentalAndPaymentMonth(rental, paymentMonth);
 
         BigDecimal totalAmountPaid = rentalPayments.stream().map(RentalPayment::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         return rental.getAmount().subtract(totalAmountPaid);

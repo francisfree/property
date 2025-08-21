@@ -4,6 +4,7 @@ import com.castle.property.entity.Rental;
 import com.castle.property.entity.RentalPayment;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,5 +13,5 @@ public interface RentalPaymentRepository extends JpaRepository<RentalPayment, Lo
 
     Optional<RentalPayment> findByPublicId(UUID publicId);
 
-    List<RentalPayment> findByRentalAndPaymentMonth(Rental rental, String paymentMonth);
+    List<RentalPayment> findByRentalAndPaymentMonth(Rental rental, LocalDate paymentMonth);
 }
