@@ -29,7 +29,6 @@
     <properties>
         <java.version>17</java.version>
         <jakarta.validation-api.version>3.0.2</jakarta.validation-api.version>
-        <joinfaces.version>5.4.4</joinfaces.version>
         <maven-model.version>3.9.6</maven-model.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -39,11 +38,6 @@
     </properties>
 
     <repositories>
-        <repository>
-            <id>Primefaces</id>
-            <name>Primefaces repo</name>
-            <url>https://repository.primefaces.org</url>
-        </repository>
     </repositories>
 
     <dependencyManagement>
@@ -52,13 +46,6 @@
                 <groupId>jakarta.validation</groupId>
                 <artifactId>jakarta.validation-api</artifactId>
                 <version>${jakarta.validation-api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.joinfaces</groupId>
-                <artifactId>joinfaces-bom</artifactId>
-                <version>${joinfaces.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven</groupId>
@@ -112,63 +99,10 @@
             <artifactId>liquibase-core</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.joinfaces</groupId>
-            <artifactId>primefaces-spring-boot-starter</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.primefaces</groupId>
-            <artifactId>primefaces</artifactId>
-            <version>14.0.12</version>
-            <classifier>jakarta</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>org.primefaces.extensions</groupId>
-            <artifactId>primefaces-extensions</artifactId>
-            <version>14.0.12</version>
-            <classifier>jakarta</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>org.omnifaces</groupId>
-            <artifactId>omnifaces</artifactId>
-            <version>4.6.5</version>
-        </dependency>
-
-        <!-- Weld for CDI -->
-        <dependency>
-            <groupId>org.jboss.weld.servlet</groupId>
-            <artifactId>weld-servlet-shaded</artifactId>
-            <version>5.1.0.Final</version>
-        </dependency>
-
-
-        <!-- https://mvnrepository.com/artifact/org.primefaces.themes/bootstrap -->
-<!--        <dependency>-->
-<!--            <groupId>org.primefaces.themes</groupId>-->
-<!--            <artifactId>bootstrap</artifactId>-->
-<!--            <version>1.1.0</version>-->
-<!--        </dependency>-->
-
-        <!-- https://mvnrepository.com/artifact/org.primefaces.themes/all-themes -->
-        <dependency>
-            <groupId>org.primefaces.themes</groupId>
-            <artifactId>all-themes</artifactId>
-            <version>1.1.0</version>
-        </dependency>
-
         <!-- https://mvnrepository.com/artifact/jakarta.servlet/jakarta.servlet-api -->
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-jasper</artifactId>
             <scope>provided</scope>
         </dependency>
 

@@ -120,7 +120,7 @@ public class HouseServiceImpl implements HouseService {
             orPredicates.add(cb.like(cb.upper(root.get("number")), "%" + searchParam.toUpperCase() + "%"));
             try {
                 Floor floor = Floor.forValue(searchParam);
-                orPredicates.add(cb.equal(root.get("location"), floor));
+                orPredicates.add(cb.equal(root.get("floor"), floor));
             } catch (Exception e) {
             }
             Predicate newPredicate = cb.or(orPredicates.toArray(new Predicate[orPredicates.size()]));
