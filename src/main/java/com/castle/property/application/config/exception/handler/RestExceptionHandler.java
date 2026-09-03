@@ -205,6 +205,12 @@ public class RestExceptionHandler {
         return new ResponseEntity<>(errorResponse, new HttpHeaders(), errorResponse.getStatus());
     }
 
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<Object> handleSpringSecurityAccessDeniedException(org.springframework.security.access.AccessDeniedException ex) {
+        final ErrorResponse errorResponse = createErrorResponse("Access is denied", HttpStatus.FORBIDDEN);
+        return new ResponseEntity<>(errorResponse, new HttpHeaders(), HttpStatus.FORBIDDEN);
+    }
+
     // 404
 
     @ExceptionHandler(NoHandlerFoundException.class)

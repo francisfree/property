@@ -182,4 +182,91 @@
         <renameColumn tableName="rentals" oldColumnName="status" newColumnName="arrears_status"/>
     </changeSet>
 
+    <!-- Security: Roles table -->
+    <changeSet id="20250101 00:01" author="francis">
+        <preConditions>
+            <not>
+                <tableExists tableName="roles"/>
+            </not>
+        </preConditions>
+        <createTable tableName="roles">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="varchar(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="description" type="varchar(250)"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Security: Users table -->
+    <changeSet id="20250101 00:02" author="francis">
+        <preConditions>
+            <not>
+                <tableExists tableName="users"/>
+            </not>
+        </preConditions>
+        <createTable tableName="users">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="public_id" type="uuid"/>
+            <column name="username" type="varchar(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="email" type="varchar(250)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password_hash" type="varchar(250)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="first_name" type="varchar(100)"/>
+            <column name="last_name" type="varchar(100)"/>
+            <column name="enabled" type="boolean" defaultValueBoolean="true"/>
+            <column name="last_login_at" type="timestamp"/>
+            <column name="date_created" type="timestamp"/>
+            <column name="date_modified" type="timestamp"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Security: User roles join table -->
+    <changeSet id="20250101 00:03" author="francis">
+        <preConditions>
+            <not>
+                <tableExists tableName="user_roles"/>
+            </not>
+        </preConditions>
+        <createTable tableName="user_roles">
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="user_roles" columnNames="user_id, role_id"/>
+        <addForeignKeyConstraint baseTableName="user_roles" baseColumnNames="user_id"
+                                 constraintName="fk_user_roles_user" referencedTableName="users" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="user_roles" baseColumnNames="role_id"
+                                 constraintName="fk_user_roles_role" referencedTableName="roles" referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- Security: Seed roles -->
+    <changeSet id="20250101 00:04" author="francis">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM roles WHERE name IN ('ADMIN', 'USER')</sqlCheck>
+        </preConditions>
+        <insert tableName="roles">
+            <column name="id" valueNumeric="1"/>
+            <column name="name" value="ADMIN"/>
+            <column name="description" value="Administrator with full access"/>
+        </insert>
+        <insert tableName="roles">
+            <column name="id" valueNumeric="2"/>
+            <column name="name" value="USER"/>
+            <column name="description" value="Standard user with basic access"/>
+        </insert>
+    </changeSet>
+
 </databaseChangeLog>
