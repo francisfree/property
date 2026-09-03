@@ -269,4 +269,65 @@
         </insert>
     </changeSet>
 
+    <changeSet id="20250102 00:01" author="francis">
+        <preConditions>
+            <not>
+                <tableExists tableName="payment_months"/>
+            </not>
+        </preConditions>
+        <createTable tableName="payment_months">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="public_id" type="uuid"/>
+            <column name="date_created" type="timestamp"/>
+            <column name="date_modified" type="timestamp"/>
+            <column name="created_by" type="varchar(250)"/>
+            <column name="modified_by" type="varchar(250)"/>
+            <column name="deleted" type="boolean" defaultValueBoolean="false"/>
+            <column name="revision_count" type="integer"/>
+            <column name="entry_month" type="date"/>
+            <column name="block_name" type="varchar(250)"/>
+            <column name="house_no" type="varchar(250)"/>
+            <column name="occupant_name" type="varchar(250)"/>
+            <column name="occupant_phone_number" type="varchar(250)"/>
+            <column name="rent_current_month" type="varchar(250)"/>
+            <column name="rent_previous_month" type="varchar(250)"/>
+            <column name="arrears_b_f" type="varchar(250)"/>
+            <column name="total_payment" type="varchar(250)"/>
+            <column name="previous_water_unit" type="varchar(250)"/>
+            <column name="current_water_unit" type="varchar(250)"/>
+            <column name="price_per_unit" type="varchar(250)"/>
+            <column name="units_consumed" type="varchar(250)"/>
+            <column name="water_bill" type="varchar(250)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20250102 00:02" author="francis">
+        <preConditions>
+            <not>
+                <tableExists tableName="payment_weekly_entry"/>
+            </not>
+        </preConditions>
+        <createTable tableName="payment_weekly_entry">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="public_id" type="uuid"/>
+            <column name="date_created" type="timestamp"/>
+            <column name="date_modified" type="timestamp"/>
+            <column name="created_by" type="varchar(250)"/>
+            <column name="modified_by" type="varchar(250)"/>
+            <column name="deleted" type="boolean" defaultValueBoolean="false"/>
+            <column name="week_count" type="integer"/>
+            <column name="week_name" type="varchar(250)"/>
+            <column name="cash" type="varchar(250)"/>
+            <column name="till" type="varchar(250)"/>
+            <column name="mpesa" type="varchar(250)"/>
+            <column name="payment_month_id" type="bigint">
+                <constraints foreignKeyName="fk_payment_month_id_table_payment_weekly_entry" referencedColumnNames="id" referencedTableName="payment_months"/>
+            </column>
+        </createTable>
+    </changeSet>
+
 </databaseChangeLog>

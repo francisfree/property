@@ -168,6 +168,14 @@
             <version>5.3.0</version> <!-- Use the latest version available -->
         </dependency>
 
+        <!-- POI 5.3.0 requires commons-io >= 2.16.1 for the builder APIs used in IOUtils.
+             Pin it explicitly to override the 2.15.1 pulled transitively via tika-core. -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.16.1</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/com.itextpdf/itext-core -->
         <dependency>
             <groupId>com.itextpdf</groupId>
