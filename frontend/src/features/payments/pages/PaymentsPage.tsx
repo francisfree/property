@@ -47,6 +47,12 @@ export function PaymentsPage() {
   const uploadMutation = useUploadPayment()
 
   useEffect(() => {
+    if (blockName && revisionCountsQuery.data && revisionCountsQuery.data.length > 0 && !revisionCount) {
+      setRevisionCount(String(revisionCountsQuery.data[0]))
+    }
+  }, [blockName, revisionCountsQuery.data, revisionCount])
+
+  useEffect(() => {
     if (pendingUpload) {
       const counts = revisionCountsQuery.data
       if (counts && counts.length > 0) {
@@ -151,7 +157,7 @@ export function PaymentsPage() {
             <SelectContent>
               {revisionCounts.map((rc) => (
                 <SelectItem key={rc} value={String(rc)}>
-                  Rev {rc}
+                  Revision {rc}
                 </SelectItem>
               ))}
             </SelectContent>

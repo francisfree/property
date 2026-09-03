@@ -144,7 +144,11 @@ public class PaymentServiceImpl implements PaymentService {
                     paymentMonth.setRentPreviousMonth(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
                     paymentMonth.setArrearsBroughtForward(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
 
-                    if (paymentMonth.getHouseNumber().isBlank() || paymentMonth.getOccupantName().isBlank()) {
+                    if (paymentMonth.getHouseNumber().isBlank() &&
+                            paymentMonth.getOccupantName().isBlank() &&
+                            paymentMonth.getOccupantPhoneNumber().isBlank() &&
+                            paymentMonth.getRentCurrentMonth().isBlank() &&
+                            paymentMonth.getRentPreviousMonth().isBlank()) {
                         break;
                     }
 
@@ -183,7 +187,8 @@ public class PaymentServiceImpl implements PaymentService {
             }
 
             LocalDate localDateMonth =  LocalDate.of(month.getYear(), month.getMonthValue(), 1);
-            int revisionCount = paymentMonthRepository.countByMonthAndBlockNameIgnoreCase(localDateMonth, blockName) + 1;
+            Integer current = paymentMonthRepository.countByMonthAndBlockNameIgnoreCase(localDateMonth, blockName);
+            int revisionCount =(current == null ? 0 : current) + 1;
 
             monthlyList.forEach(paymentMonthly -> {
                 paymentMonthly.setRevisionCount(revisionCount);

@@ -9,11 +9,12 @@ import java.util.Set;
 
 public interface PaymentMonthRepository extends JpaRepository<PaymentMonth, Long> {
 
-    int countByMonthAndBlockNameIgnoreCase(LocalDate month, String blockName);
+    @Query("select coalesce(max(pm.revisionCount), 0) from PaymentMonth pm where pm.month = ?1 and lower(pm.blockName) = lower(?2)")
+    Integer countByMonthAndBlockNameIgnoreCase(LocalDate month, String blockName);
 
     @Query("select pm.blockName from PaymentMonth pm where pm.month = ?1")
     Set<String> getBlockNameDistinctByMonth(LocalDate paymentMonth);
 
-    @Query("select pm.revisionCount from PaymentMonth pm where pm.month = ?1 and pm.blockName = ?2")
+    @Query("select pm.revisionCount from PaymentMonth pm where pm.month = ?1 and lower(pm.blockName) = lower(?2)")
     Set<Integer> getRevisionDistinctByMonth(LocalDate paymentMonth, String blockName);
 }
