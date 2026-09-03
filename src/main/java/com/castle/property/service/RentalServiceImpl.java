@@ -25,6 +25,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +35,7 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Validated
 public class RentalServiceImpl implements RentalService {
     @PersistenceContext
     private EntityManager entityManager;
@@ -88,7 +91,7 @@ public class RentalServiceImpl implements RentalService {
             final List<Predicate> orPredicates = new ArrayList<>();
             try {
                 Floor floor = Floor.forValue(rentalFilterRequest.getSearchParam());
-                orPredicates.add(cb.equal(root.get("house").get("location"), floor));
+                orPredicates.add(cb.equal(root.get("house").get("floor"), floor));
             } catch (Exception e) {
             }
             orPredicates.add(cb.like(cb.upper(root.get("house").get("number")), "%" + rentalFilterRequest.getSearchParam().toUpperCase() + "%"));
@@ -106,6 +109,7 @@ public class RentalServiceImpl implements RentalService {
     }
 
     @Override
+    @Transactional
     public Rental createRental(RentalRequest request) {
         House house = houseService.getHouse(request.getHousePublicId());
 
@@ -146,6 +150,7 @@ public class RentalServiceImpl implements RentalService {
     }
 
     @Override
+    @Transactional
     public Rental rentalActions(@NotNull UUID rentalPublicId, @Valid RentalActionRequest request) {
         Rental rental = getRental(rentalPublicId);
         if (request.getActionType() == RentalActionRequest.ActionTypes.ChangeAmount) {

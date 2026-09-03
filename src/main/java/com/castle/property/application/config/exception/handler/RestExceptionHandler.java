@@ -35,6 +35,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
@@ -209,6 +210,14 @@ public class RestExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<Object> handleNoHandlerFoundException(final NoHandlerFoundException ex, final WebRequest request) {
         final String error = "No handler found for " + ex.getHttpMethod() + " " + ex.getRequestURL();
+
+        final ErrorResponse errorResponse = createErrorResponse(error, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<Object>(errorResponse, new HttpHeaders(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Object> handleNoResourceFoundException(final NoResourceFoundException ex, final WebRequest request) {
+        final String error = "No resource found for " + ex.getHttpMethod() + " " + ex.getResourcePath();
 
         final ErrorResponse errorResponse = createErrorResponse(error, HttpStatus.NOT_FOUND);
         return new ResponseEntity<Object>(errorResponse, new HttpHeaders(), HttpStatus.NOT_FOUND);

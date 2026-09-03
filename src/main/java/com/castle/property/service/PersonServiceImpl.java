@@ -135,7 +135,7 @@ public class PersonServiceImpl implements PersonService {
 
         if (identificationNumber != null && identificationNumber.trim().length() >= 3) {
             final List<Predicate> orPredicates = new ArrayList<>();
-            orPredicates.add(cb.like(cb.upper(root.get("identificationNumber")), "%" + searchParam.toUpperCase() + "%"));
+            orPredicates.add(cb.like(cb.upper(root.get("identificationNumber")), "%" + identificationNumber.toUpperCase() + "%"));
 
             Predicate p = cb.or(orPredicates.toArray(new Predicate[orPredicates.size()]));
             andPredicates.add(p);
@@ -143,7 +143,7 @@ public class PersonServiceImpl implements PersonService {
 
         if (phoneNumber != null && phoneNumber.trim().length() >= 3) {
             final List<Predicate> orPredicates = new ArrayList<>();
-            orPredicates.add(cb.like(cb.upper(root.get("phoneNumber")), "%" + searchParam.toUpperCase() + "%"));
+            orPredicates.add(cb.like(cb.upper(root.get("phoneNumber")), "%" + phoneNumber.toUpperCase() + "%"));
 
             Predicate p = cb.or(orPredicates.toArray(new Predicate[orPredicates.size()]));
             andPredicates.add(p);
