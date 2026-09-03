@@ -51,10 +51,79 @@ const client: AxiosInstance = axios.create({
   },
 })
 
+// Token getter function - set by AuthProvider
+let tokenGetter: (() => string | null) | null = null
+
+export function setTokenGetter(getter: () => string | null) {
+  tokenGetter = getter
+}
+
+// Request interceptor to attach access token
+client.interceptors.request.use(
+  (config) => {
+    const token = tokenGetter?.()
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => Promise.reject(error),
+)
+
+// Track if we're currently refreshing to prevent loops
+let isRefreshing = false
+let failedQueue: Array<{
+  resolve: (value: unknown) => void
+  reject: (reason?: unknown) => void
+}> = []
+
+function processQueue(error: unknown) {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error)
+    } else {
+      prom.resolve(undefined)
+    }
+  })
+  failedQueue = []
+}
+
 client.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<ApiErrorResponse>) => {
+  async (error: AxiosError<ApiErrorResponse>) => {
     const status = error.response?.status ?? 0
+    const originalRequest = error.config
+
+    // Handle 401 - try refresh token
+    if (status === 401 && originalRequest && !("_retry" in originalRequest)) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject })
+        }).then(() => client(originalRequest))
+      }
+
+      ;(originalRequest as AxiosRequestConfig & { _retry: boolean })._retry =
+        true
+      isRefreshing = true
+
+      try {
+        await axios.post(`${API_BASE}/auth/refresh`, null, {
+          withCredentials: true,
+        })
+        processQueue(null)
+        return client(originalRequest)
+      } catch (refreshError) {
+        processQueue(refreshError)
+        // Refresh failed - clear auth state by redirecting to the login route.
+        // The URL is built from BASE_URL so it respects the context-path basename
+        // (e.g. "/property/login") rather than navigating to the app root.
+        window.location.href = `${import.meta.env.BASE_URL}login`
+        return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
+      }
+    }
+
     const message = buildErrorMessage(status, error.response?.data)
     return Promise.reject(new ApiError(message, status, error.response?.data?.messages))
   },
@@ -80,6 +149,15 @@ export async function apiPut<T>(
   config?: AxiosRequestConfig,
 ): Promise<T> {
   const response = await client.put<T>(url, data, config)
+  return response.data
+}
+
+export async function apiPatch<T>(
+  url: string,
+  data?: unknown,
+  config?: AxiosRequestConfig,
+): Promise<T> {
+  const response = await client.patch<T>(url, data, config)
   return response.data
 }
 

@@ -8,8 +8,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -36,10 +38,13 @@ public class PropertyControllerTests extends PropertyApplicationTests {
 
     @Before
     public void setUpMockMvc() {
-        mvc = MockMvcBuilders.webAppContextSetup(context).build();
+        mvc = MockMvcBuilders.webAppContextSetup(context)
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     public void listPropertiesWorks() throws Exception {
         mvc.perform(get(baseUrl))
                 .andExpect(status().isOk())
@@ -48,6 +53,7 @@ public class PropertyControllerTests extends PropertyApplicationTests {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     public void listPropertiesWithSearchWorks() throws Exception {
         mvc.perform(get(baseUrl).param("search", "Thika"))
                 .andExpect(status().isOk())
@@ -55,6 +61,7 @@ public class PropertyControllerTests extends PropertyApplicationTests {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     public void listAllPropertiesWorks() throws Exception {
         mvc.perform(get(baseUrl + "/list"))
                 .andExpect(status().isOk())
@@ -62,6 +69,7 @@ public class PropertyControllerTests extends PropertyApplicationTests {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     public void getPropertyWorks() throws Exception {
         mvc.perform(get(baseUrl + "/25e1fa0c-1dc9-11f0-9cd2-0242ac120002"))
                 .andExpect(status().isOk())
@@ -69,12 +77,14 @@ public class PropertyControllerTests extends PropertyApplicationTests {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     public void getPropertyNotFoundReturns400() throws Exception {
         mvc.perform(get(baseUrl + "/" + UUID.randomUUID()))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     public void createPropertyWorks() throws Exception {
         String body = objectMapper.writeValueAsString(java.util.Map.of(
                 "name", "API Test " + RandomStringUtils.randomAlphabetic(6),
@@ -91,6 +101,7 @@ public class PropertyControllerTests extends PropertyApplicationTests {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     public void createPropertyInvalidReturns400() throws Exception {
         String body = objectMapper.writeValueAsString(java.util.Map.of(
                 "name", "",
@@ -106,6 +117,7 @@ public class PropertyControllerTests extends PropertyApplicationTests {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     public void createPropertyDuplicateReturns400() throws Exception {
         String body = objectMapper.writeValueAsString(java.util.Map.of(
                 "name", "Property 1",
@@ -120,6 +132,7 @@ public class PropertyControllerTests extends PropertyApplicationTests {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     public void propertyCreateUpdateLifecycleWorks() throws Exception {
         String uniqueName = "Lifecycle " + RandomStringUtils.randomAlphabetic(6);
         String createBody = objectMapper.writeValueAsString(java.util.Map.of(
@@ -152,5 +165,11 @@ public class PropertyControllerTests extends PropertyApplicationTests {
         mvc.perform(get(baseUrl + "/" + createdId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value(uniqueName));
+    }
+
+    @Test
+    public void unauthenticatedRequestReturns401() throws Exception {
+        mvc.perform(get(baseUrl))
+                .andExpect(status().isUnauthorized());
     }
 }

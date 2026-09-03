@@ -29,5 +29,6 @@ public interface PersonService {
 
     Number searchPersonsCount(String identificationNumber, String phoneNumber, String searchParam);
 
+    @Deprecated
     String generatePassword(String si, String password, StringBuilder saltString);
 }

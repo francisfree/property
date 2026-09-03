@@ -1,16 +1,15 @@
 package com.castle.property.application.config.audit;
 
 import org.springframework.data.domain.AuditorAware;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
 /**
  * Supplies the current user for JPA auditing (@CreatedBy / @LastModifiedBy).
- *
- * <p>Authentication is not yet implemented, so this returns a fixed "system"
- * identifier. When authentication is added, replace this with the authenticated
- * principal (e.g. a username or UUID from Spring Security).</p>
  */
 @Component("auditorProvider")
 public class AuditorAwareImpl implements AuditorAware<String> {
@@ -19,6 +18,11 @@ public class AuditorAwareImpl implements AuditorAware<String> {
 
     @Override
     public Optional<String> getCurrentAuditor() {
-        return Optional.of(SYSTEM_USER);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
+            return Optional.of(SYSTEM_USER);
+        }
+        return Optional.ofNullable(authentication.getName());
     }
 }
