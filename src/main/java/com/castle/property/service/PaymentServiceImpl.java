@@ -54,18 +54,20 @@ public class PaymentServiceImpl implements PaymentService {
     private Map<Integer, String> extractWeeklyEntries(Row row, DataFormatter dataFormatter) {
         DateTimeFormatter dateTimeFormatter1 = DateTimeFormatter.ofPattern("M-d-yy");
         DateTimeFormatter dateTimeFormatter2 = DateTimeFormatter.ofPattern("d/M/yy");
+        DateTimeFormatter cleanDateTimeFormatter = DateTimeFormatter.ofPattern("dd-MMM-yy");
 
         Map<Integer, String> weeklyEntries = new HashMap<>();
         for (int columnIndex = 0; columnIndex < 17; columnIndex++) {
             String cellData = dataFormatter.formatCellValue(row.getCell(columnIndex));
+            LocalDate date;
             if (StringUtils.hasText(cellData)) {
                 try {
-                    dateTimeFormatter1.parse(cellData);
-                    weeklyEntries.put(columnIndex, cellData);
+                    date = LocalDate.parse(cellData, dateTimeFormatter1);
+                    weeklyEntries.put(columnIndex, date.format(cleanDateTimeFormatter));
                 } catch (DateTimeParseException e) {
                     try {
-                        dateTimeFormatter2.parse(cellData);
-                        weeklyEntries.put(columnIndex, cellData);
+                        date = LocalDate.parse(cellData, dateTimeFormatter2);
+                        weeklyEntries.put(columnIndex, date.format(cleanDateTimeFormatter));
                     } catch (DateTimeParseException ignore) {
                     }
                 }
@@ -168,9 +170,9 @@ public class PaymentServiceImpl implements PaymentService {
                         paymentWeeklyEntry.setPaymentMonth(paymentMonth);
                         paymentWeeklyEntry.setWeekName(weekName);
                         paymentWeeklyEntry.setWeekCount(weekCount.incrementAndGet());
-                        paymentWeeklyEntry.setCash(dataFormatter.formatCellValue(weeklyRow1.getCell(weeklyColumIndex), evaluator).trim());
-                        paymentWeeklyEntry.setTill(dataFormatter.formatCellValue(weeklyRow2.getCell(weeklyColumIndex), evaluator).trim());
-                        paymentWeeklyEntry.setMpesa(dataFormatter.formatCellValue(weeklyRow3.getCell(weeklyColumIndex), evaluator).trim());
+                        paymentWeeklyEntry.setCash(extractValueAmount(weeklyColumIndex, dataFormatter, weeklyRow1, evaluator));
+                        paymentWeeklyEntry.setTill(extractValueAmount(weeklyColumIndex, dataFormatter, weeklyRow2, evaluator));
+                        paymentWeeklyEntry.setMpesa(extractValueAmount(weeklyColumIndex, dataFormatter, weeklyRow3, evaluator));
 
                         paymentMonth.getWeeklyList().add(paymentWeeklyEntry);
                     });
@@ -195,6 +197,13 @@ public class PaymentServiceImpl implements PaymentService {
             throw new RuntimeException(e);
         }
 
+    }
+
+    private String extractValueAmount(Integer weeklyColumIndex, DataFormatter dataFormatter, Row weeklyRow1, FormulaEvaluator evaluator) {
+        String value = dataFormatter.formatCellValue(weeklyRow1.getCell(weeklyColumIndex), evaluator).trim();
+        if (value.isEmpty()) return "0";
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("[A-Z]-(.+)").matcher(value);
+        return matcher.matches() ? matcher.group(1) : "0";
     }
 
     @Override

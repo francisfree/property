@@ -47,6 +47,7 @@ public final class PaymentMapper {
                 paymentMonth.getPreviousWaterUnit(),
                 paymentMonth.getCurrentWaterUnit(),
                 paymentMonth.getPricePerUnit(),
+                paymentMonth.getUnitsConsumed(),
                 paymentMonth.getWaterBill(),
                 weeklyEntries
         );

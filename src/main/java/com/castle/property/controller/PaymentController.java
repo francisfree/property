@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.YearMonth;
+import java.util.Collections;
 import java.util.Set;
 
 @RestController
@@ -45,11 +46,14 @@ public class PaymentController {
     @GetMapping
     public PagedResponse<PaymentMonthResponse> getMonthlyPayments(@RequestParam(defaultValue = "0") int page,
                                                                   @RequestParam(defaultValue = "25") int size,
-                                                                  @RequestParam(name = "revisionCount") Integer revisionCount,
-                                                                  @RequestParam(name = "month") YearMonth yearMonth,
-                                                                  @RequestParam(name = "blockName") String blockName,
+                                                                  @RequestParam(name = "revisionCount", required = false) Integer revisionCount,
+                                                                  @RequestParam(name = "month", required = false) YearMonth yearMonth,
+                                                                  @RequestParam(name = "blockName", required = false) String blockName,
                                                                   @RequestParam(name = "searchParam", required = false) String searchParam) {
 
+        if (revisionCount == null || yearMonth == null || blockName == null) {
+            return new PagedResponse<>(Collections.emptyList(), 0, 0, 0, 0);
+        }
         Page<PaymentMonth> result = paymentService.getMonthlyPayments(revisionCount, yearMonth, blockName, searchParam, PageRequest.of(page, size));
         return PagedResponse.of(result.map(PaymentMapper::toResponse));
     }

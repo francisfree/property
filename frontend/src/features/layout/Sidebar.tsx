@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom"
-import { Building2, DoorOpen, Users, FileText, Shield } from "lucide-react"
+import { Building2, DoorOpen, Users, FileText, DollarSign, Shield } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/features/authentication/hooks"
 
@@ -8,6 +8,7 @@ const navigation = [
   { to: "/houses", label: "Houses", icon: DoorOpen },
   { to: "/persons", label: "Persons", icon: Users },
   { to: "/rentals", label: "Rentals", icon: FileText },
+  { to: "/payments", label: "Payments", icon: DollarSign },
 ]
 
 export function Sidebar() {

@@ -23,6 +23,7 @@ public record PaymentMonthResponse(
         String previousWaterUnit,
         String currentWaterUnit,
         String pricePerUnit,
+        String unitsConsumed,
         String waterBill,
         List<PaymentWeeklyEntryResponse> weeklyEntries
 ) {
