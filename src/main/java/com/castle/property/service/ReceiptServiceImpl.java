@@ -9,10 +9,12 @@ import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -20,8 +22,10 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +39,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 
     private static final String TEMPLATE_NAME = "receipt_template";
     private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("MMMM yyyy");
+    private static final DecimalFormat DECIMAL_FORMATTER = new DecimalFormat("###,###.##");
     private static final Map<String, File> FONT_CACHE = new ConcurrentHashMap<>();
 
     private final RentalPaymentRepository rentalPaymentRepository;
@@ -46,17 +51,72 @@ public class ReceiptServiceImpl implements ReceiptService {
         RentalPayment rentalPayment = rentalPaymentRepository.findByPublicId(paymentMonthPublicId)
                 .orElseThrow(() -> new ApplicationOperationException("operation.record.not.found"));
 
-        RentalPayment savedRentalPayment;
+        boolean newlyNumbered = rentalPayment.getReceiptNumber() == null;
+        ensureReceiptNumber(rentalPayment);
+        RentalPayment savedRentalPayment = newlyNumbered
+                ? rentalPaymentRepository.save(rentalPayment)
+                : rentalPayment;
 
+        return renderReceiptPdf(savedRentalPayment);
+    }
+
+    @Override
+    public byte[] generatePaymentReceipts(List<UUID> paymentMonthPublicIds) {
+        if (paymentMonthPublicIds == null || paymentMonthPublicIds.isEmpty()) {
+            throw new ApplicationOperationException("operation.record.not.found");
+        }
+
+        List<RentalPayment> rentalPayments = rentalPaymentRepository.findAllByPublicIdInOrderById(paymentMonthPublicIds);
+        if (rentalPayments.size() != paymentMonthPublicIds.size()) {
+            throw new ApplicationOperationException("operation.record.not.found");
+        }
+
+        Map<UUID, RentalPayment> byPublicId = new HashMap<>();
+        for (RentalPayment rentalPayment : rentalPayments) {
+            byPublicId.put(rentalPayment.getPublicId(), rentalPayment);
+        }
+
+        List<byte[]> pdfs = new ArrayList<>();
+        List<RentalPayment> newlyNumbered = new ArrayList<>();
+        for (UUID publicId : paymentMonthPublicIds) {
+            RentalPayment rentalPayment = byPublicId.get(publicId);
+            if (rentalPayment == null) {
+                throw new ApplicationOperationException("operation.record.not.found");
+            }
+            if (rentalPayment.getReceiptNumber() == null) {
+                newlyNumbered.add(rentalPayment);
+            }
+            ensureReceiptNumber(rentalPayment);
+            pdfs.add(renderReceiptPdf(rentalPayment));
+        }
+
+        if (!newlyNumbered.isEmpty()) {
+            rentalPaymentRepository.saveAll(newlyNumbered);
+        }
+
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            PDFMergerUtility merger = new PDFMergerUtility();
+            for (byte[] pdf : pdfs) {
+                merger.addSource(new ByteArrayInputStream(pdf));
+            }
+            merger.setDestinationStream(outputStream);
+            merger.mergeDocuments();
+            return outputStream.toByteArray();
+        } catch (IOException exception) {
+            log.error("Failed to merge {} payment receipts", paymentMonthPublicIds.size(), exception);
+            throw new ApplicationOperationException("error.data.processing", exception);
+        }
+    }
+
+    private void ensureReceiptNumber(RentalPayment rentalPayment) {
         if (rentalPayment.getReceiptNumber() == null) {
             Integer nextCounter = counterService.getNextCounter(CounterType.RentReceipt);
             rentalPayment.setReceiptNumber(String.format("RPT-%d", nextCounter));
-            savedRentalPayment = rentalPaymentRepository.save(rentalPayment);
-        } else {
-            savedRentalPayment = rentalPayment;
         }
+    }
 
-        Map<String, Object> model = toModel(savedRentalPayment);
+    private byte[] renderReceiptPdf(RentalPayment rentalPayment) {
+        Map<String, Object> model = toModel(rentalPayment);
         String html = htmlToPdfTemplateService.render(TEMPLATE_NAME, model);
 
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
@@ -70,7 +130,7 @@ public class ReceiptServiceImpl implements ReceiptService {
             builder.run();
             return byteArrayOutputStream.toByteArray();
         } catch (IOException exception) {
-            log.error("Failed to generate payment receipt for payment month publicId {}", paymentMonthPublicId, exception);
+            log.error("Failed to generate payment receipt PDF", exception);
             throw new ApplicationOperationException("error.data.processing", exception);
         }
     }
@@ -83,13 +143,26 @@ public class ReceiptServiceImpl implements ReceiptService {
         model.put("houseNo", rentalPayment.getHouseNumber());
         model.put("paybillHouseNo", rentalPayment.getHouseNumber());
         model.put("month", rentalPayment.getMonth() == null ? "" : rentalPayment.getMonth().format(MONTH_FORMATTER));
-        model.put("rentPerMonth", rentalPayment.getRentCurrentMonth());
-        model.put("waterBill", rentalPayment.getWaterBill());
-        model.put("arrearsBroughtForward", rentalPayment.getArrearsBroughtForward());
+        model.put("rentPerMonth", formatToNumericValue(rentalPayment.getRentCurrentMonth()));
+        model.put("waterBill", formatToNumericValue((rentalPayment.getWaterBill())));
+        model.put("arrearsBroughtForward", formatToNumericValue(rentalPayment.getArrearsBroughtForward()));
         model.put("weekly", toWeeklyModel(rentalPayment.getWeeklyEntries()));
-        model.put("totalCollected", rentalPayment.getTotalPayment());
-        model.put("arrearsCarriedForward", rentalPayment.getArrearsBroughtForward());
+        model.put("totalCollected", formatToNumericValue((rentalPayment.getTotalPayment())));
+        model.put("arrearsCarriedForward", formatToNumericValue(rentalPayment.getArrearsBroughtForward()));
         return model;
+    }
+
+    private String formatToNumericValue(String strAmount) {
+       if (strAmount != null) {
+            BigDecimal amount;
+            try {
+                amount = new BigDecimal(strAmount.replace(",", "").trim());
+            } catch (NumberFormatException e) {
+                return strAmount;
+            }
+            return DECIMAL_FORMATTER.format(amount);
+        }
+        return null;
     }
 
     private List<Map<String, Object>> toWeeklyModel(List<PaymentWeeklyEntry> weeklyList) {
@@ -97,7 +170,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         for (PaymentWeeklyEntry weeklyEntry : weeklyList) {
             Map<String, Object> entry = new LinkedHashMap<>();
             entry.put("weekName", weeklyEntry.getWeekName());
-            entry.put("amount", weeklyAmount(weeklyEntry));
+            entry.put("amount", formatToNumericValue(weeklyAmount(weeklyEntry)));
             weekly.add(entry);
         }
         return weekly;

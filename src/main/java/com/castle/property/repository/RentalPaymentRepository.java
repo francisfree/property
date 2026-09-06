@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -21,4 +23,6 @@ public interface RentalPaymentRepository extends JpaRepository<RentalPayment, Lo
     Set<Integer> getRevisionDistinctByMonth(LocalDate paymentMonth, String blockName);
 
     Optional<RentalPayment> findByPublicId(UUID publicId);
+
+    List<RentalPayment> findAllByPublicIdInOrderById(Collection<UUID> publicIds);
 }

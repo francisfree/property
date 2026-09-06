@@ -18,6 +18,7 @@ export interface PaymentMonth {
   houseNumber: string
   occupantName: string
   occupantPhoneNumber: string
+  receiptNumber: string | null
   rentCurrentMonth: string
   rentPreviousMonth: string
   arrearsBroughtForward: string

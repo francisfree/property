@@ -1,6 +1,6 @@
 package com.castle.property.mapper;
 
-import com.castle.property.dto.PaymentMonthResponse;
+import com.castle.property.dto.RentalPaymentResponse;
 import com.castle.property.dto.PaymentWeeklyEntryResponse;
 import com.castle.property.entity.RentalPayment;
 
@@ -8,14 +8,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Maps {@link RentalPayment} entities to {@link PaymentMonthResponse} DTOs.
+ * Maps {@link RentalPayment} entities to {@link RentalPaymentResponse} DTOs.
  */
-public final class PaymentMapper {
+public final class RentalPaymentMapper {
 
-    private PaymentMapper() {
+    private RentalPaymentMapper() {
     }
 
-    public static PaymentMonthResponse toResponse(RentalPayment rentalPayment) {
+    public static RentalPaymentResponse toResponse(RentalPayment rentalPayment) {
         if (rentalPayment == null) {
             return null;
         }
@@ -31,7 +31,7 @@ public final class PaymentMapper {
                         paymentWeekly.getMpesa()
                 )).collect(Collectors.toList());
 
-        return new PaymentMonthResponse(
+        return new RentalPaymentResponse(
                 rentalPayment.getId(),
                 rentalPayment.getPublicId(),
                 rentalPayment.getDateCreated(),

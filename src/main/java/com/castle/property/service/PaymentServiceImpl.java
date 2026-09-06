@@ -1,10 +1,10 @@
 package com.castle.property.service;
 
 import com.castle.property.application.config.exception.ApplicationOperationException;
-import com.castle.property.dto.PaymentMonthResponse;
+import com.castle.property.dto.RentalPaymentResponse;
 import com.castle.property.entity.RentalPayment;
 import com.castle.property.entity.PaymentWeeklyEntry;
-import com.castle.property.mapper.PaymentMapper;
+import com.castle.property.mapper.RentalPaymentMapper;
 import com.castle.property.repository.RentalPaymentRepository;
 import com.castle.property.repository.PaymentWeeklyEntryRepository;
 import jakarta.persistence.EntityManager;
@@ -214,10 +214,10 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentMonthResponse getMonthlyPayment(UUID publicId) {
+    public RentalPaymentResponse getMonthlyPayment(UUID publicId) {
         RentalPayment rentalPayment = rentalPaymentRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ApplicationOperationException("operation.record.not.found"));
-        return PaymentMapper.toResponse(rentalPayment);
+        return RentalPaymentMapper.toResponse(rentalPayment);
     }
 
     @Override

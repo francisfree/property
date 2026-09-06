@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 
-public record PaymentMonthResponse(
+public record RentalPaymentResponse(
         Long id,
         UUID publicId,
         LocalDateTime dateCreated,

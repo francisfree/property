@@ -14,6 +14,8 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
+import java.nio.charset.StandardCharsets;
+
 public class PaymentControllerTests extends PropertyApplicationTests {
 
     private static final String PAYMENT_EXCEL_RESOURCE = "/document/payment_august.xlsx";
@@ -230,7 +232,7 @@ public class PaymentControllerTests extends PropertyApplicationTests {
 
         Response receiptResponse = given()
                 .auth().oauth2(token)
-                .get(baseUrl + "/{paymentMonthId}/receipt", publicId)
+                .get(baseUrl + "/receipts/{publicId}", publicId)
                 .andReturn();
 
         Assert.assertEquals(200, receiptResponse.statusCode());
@@ -261,6 +263,76 @@ public class PaymentControllerTests extends PropertyApplicationTests {
         Assert.assertEquals(publicId, singleResponse.jsonPath().getString("publicId"));
         Assert.assertEquals(receiptNumber, singleResponse.jsonPath().getString("receiptNumber"));
         Assert.assertTrue(singleResponse.jsonPath().getString("houseNumber") != null);
+    }
+
+    @Test
+    public void combinedReceiptsDownloadWorks() throws Exception {
+        String token = getAuthToken("admin", "admin123");
+
+        given()
+                .auth().oauth2(token)
+                .multiPart("file", loadPaymentTestFile())
+                .param("month", "2026-09")
+                .param("blockName", "Block C")
+                .when()
+                .post(baseUrl + "/upload")
+                .then()
+                .statusCode(200);
+
+        Response listResponse = given()
+                .auth().oauth2(token)
+                .queryParam("revisionCount", 1)
+                .queryParam("month", "2026-09")
+                .queryParam("blockName", "Block C")
+                .when()
+                .get(baseUrl)
+                .then().log().all()
+                .statusCode(200)
+                .extract().response();
+
+        long totalElements = listResponse.jsonPath().getLong("totalElements");
+        org.junit.Assert.assertTrue("expected at least two monthly payments", totalElements >= 2);
+
+        String firstId = listResponse.jsonPath().getString("content[0].publicId");
+        String secondId = listResponse.jsonPath().getString("content[1].publicId");
+        Assert.assertNotEquals(firstId, secondId);
+
+        Response combinedResponse = given()
+                .auth().oauth2(token)
+                .contentType("application/json")
+                .body("{\"publicIds\": [\"" + firstId + "\", \"" + secondId + "\"]}")
+                .when()
+                .post(baseUrl + "/receipts")
+                .then().log().all()
+                .statusCode(200)
+                .extract().response();
+
+        Assert.assertEquals(200, combinedResponse.statusCode());
+        Assert.assertTrue("expected application/pdf content type",
+                combinedResponse.getContentType().startsWith("application/pdf"));
+
+        byte[] pdfBytes = combinedResponse.getBody().asByteArray();
+        Assert.assertTrue("expected a non-empty combined PDF", pdfBytes.length > 0);
+        Assert.assertEquals("%PDF", new String(pdfBytes, 0, 4, StandardCharsets.UTF_8));
+        saveExport(combinedResponse, "Receipts_Combined.pdf");
+
+        Response listAfter = given()
+                .auth().oauth2(token)
+                .queryParam("revisionCount", 1)
+                .queryParam("month", "2026-09")
+                .queryParam("blockName", "Block C")
+                .when()
+                .get(baseUrl)
+                .then().log().all()
+                .statusCode(200)
+                .extract().response();
+
+        String firstReceiptNumber = listAfter.jsonPath().getString("content[0].receiptNumber");
+        String secondReceiptNumber = listAfter.jsonPath().getString("content[1].receiptNumber");
+        org.junit.Assert.assertTrue("expected a receipt number to be assigned after combined download",
+                firstReceiptNumber != null && firstReceiptNumber.startsWith("RPT-"));
+        org.junit.Assert.assertTrue("expected a receipt number to be assigned after combined download",
+                secondReceiptNumber != null && secondReceiptNumber.startsWith("RPT-"));
     }
 
     private File loadPaymentTestFile() throws Exception {
