@@ -148,6 +148,23 @@
             font-weight: bold;
         }
 
+        .details-table .details-subsection {
+            font-size: 8pt;
+            color: #555;
+            padding: 2pt 7pt 4pt 7pt;
+            text-align: left;
+        }
+
+        .details-table .details-subsection span {
+            margin-right: 14pt;
+            white-space: nowrap;
+        }
+
+        .details-table .details-subsection strong {
+            color: #222;
+            font-weight: normal;
+        }
+
         /* Paybill emphasis */
         .paybill {
             margin: 9pt 0 12pt 0;
@@ -345,6 +362,13 @@
             <tr>
                 <td class="details-label">Water Bill Per Month</td>
                 <td class="details-value" th:text="${waterBill}"></td>
+            </tr>
+            <tr>
+                <td colspan="2" class="details-subsection">
+                    <span>Previous Units: <strong th:text="${previousWaterUnit}"></strong></span>
+                    <span>Current Units: <strong th:text="${currentWaterUnit}"></strong></span>
+                    <span>Consumed Units: <strong th:text="${unitsConsumed}"></strong></span>
+                </td>
             </tr>
             <tr>
                 <td class="details-label">Garbage Bill Per Month</td>

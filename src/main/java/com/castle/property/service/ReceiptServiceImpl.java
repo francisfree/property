@@ -145,6 +145,9 @@ public class ReceiptServiceImpl implements ReceiptService {
         model.put("month", rentalPayment.getMonth() == null ? "" : rentalPayment.getMonth().format(MONTH_FORMATTER));
         model.put("rentPerMonth", formatToNumericValue(rentalPayment.getRentCurrentMonth()));
         model.put("waterBill", formatToNumericValue((rentalPayment.getWaterBill())));
+        model.put("previousWaterUnit", formatToNumericValue(rentalPayment.getPreviousWaterUnit()));
+        model.put("currentWaterUnit", formatToNumericValue(rentalPayment.getCurrentWaterUnit()));
+        model.put("unitsConsumed", formatToNumericValue(rentalPayment.getUnitsConsumed()));
         model.put("arrearsBroughtForward", formatToNumericValue(rentalPayment.getArrearsBroughtForward()));
         model.put("weekly", toWeeklyModel(rentalPayment.getWeeklyEntries()));
         model.put("totalCollected", formatToNumericValue((rentalPayment.getTotalPayment())));
