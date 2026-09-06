@@ -1,0 +1,413 @@
+
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Rent Receipt</title>
+
+    <style>
+        @page {
+            size: A4;
+            margin: 14mm 18mm 14mm 18mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.4;
+            color: #111;
+            background: #fff;
+        }
+
+        .receipt {
+            width: 100%;
+        }
+
+        /* Header */
+        .header {
+            width: 100%;
+            border-bottom: 1px solid #222;
+            padding-bottom: 7pt;
+            margin-bottom: 12pt;
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .header-table td {
+            padding: 0;
+            vertical-align: middle;
+        }
+
+        .property-name {
+            font-size: 13pt;
+            font-weight: bold;
+            letter-spacing: 0.2pt;
+        }
+
+        .address {
+            text-align: right;
+            font-size: 9.5pt;
+        }
+
+        .receipt-title {
+            text-align: center;
+            font-size: 16pt;
+            font-weight: bold;
+            letter-spacing: 1pt;
+            margin: 0 0 14pt 0;
+        }
+
+        /* General information */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10pt;
+            font-size: 18px;
+        }
+
+        .info-table td {
+            padding: 4pt 6pt;
+            vertical-align: middle;
+        }
+
+        .info-table .label {
+            width: 20%;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .info-table .value {
+            width: 30%;
+        }
+
+        .info-table .label-right {
+            width: 20%;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .info-table .value-right {
+            width: 30%;
+        }
+
+        /* Payment details */
+        .section {
+            margin-top: 13pt;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            margin: 0 0 7pt 0;
+            padding: 5pt 0 4pt 0;
+            font-size: 11pt;
+            font-weight: bold;
+            background: #fff;
+            border-left: none;
+            border-top: 1.5pt solid #222;
+            border-bottom: 1.5pt solid #222;
+        }
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .details-table tr {
+            page-break-inside: avoid;
+        }
+
+        .details-table td {
+            padding: 5pt 7pt;
+            border-bottom: 0.5pt solid #d5d5d5;
+            vertical-align: middle;
+        }
+
+        .details-table .details-label {
+            width: 42%;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .details-table .details-value {
+            width: 58%;
+            text-align: right;
+            font-weight: normal;
+        }
+
+        .details-table .highlight-value {
+            font-weight: bold;
+        }
+
+        /* Paybill emphasis */
+        .paybill {
+            margin: 9pt 0 12pt 0;
+            padding: 7pt 9pt;
+            border: 1px solid #555;
+            text-align: center;
+            font-weight: bold;
+            font-style: italic;
+            page-break-inside: avoid;
+            font-size: 25px;
+        }
+
+        /* Weekly collection table */
+        .collections-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2pt;
+            page-break-inside: avoid;
+        }
+
+        .collections-table th {
+            padding: 6pt 7pt;
+            background: #fff;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .collections-table th.amount,
+        .collections-table td.amount {
+            text-align: right;
+        }
+
+        .collections-table th.amount {
+            width: 35%;
+        }
+
+        .collections-table td {
+            padding: 5pt 7pt;
+            border-bottom: 0.5pt solid #d5d5d5;
+        }
+
+        .collections-table tbody tr:last-child td {
+            border-bottom: 1px solid #333;
+        }
+
+        /* Totals */
+        .totals-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 9pt;
+            page-break-inside: avoid;
+        }
+
+        .totals-table td {
+            padding: 5pt 7pt;
+            vertical-align: middle;
+        }
+
+        .totals-table .total-label {
+            width: 70%;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .totals-table .total-value {
+            width: 30%;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .total-primary td {
+            border-top: 1px solid #333;
+            font-size: 11pt;
+        }
+
+        .total-secondary td {
+            border-bottom: 1px solid #333;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 24pt;
+            page-break-inside: avoid;
+        }
+
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .footer-table td {
+            width: 50%;
+            padding: 5pt 7pt;
+            vertical-align: bottom;
+        }
+
+        .signature-line,
+        .date-line,
+        .stamp-line {
+            display: inline-block;
+            min-width: 350px;
+            height: 16pt;
+            border-bottom: 1px dotted #333;
+            vertical-align: bottom;
+        }
+
+        .date-line {
+            min-width: 350px;
+        }
+
+        .stamp {
+            margin-top: 18pt;
+        }
+
+        .stamp-line {
+            min-width: 370px;
+        }
+
+        .footer-label {
+            font-weight: bold;
+        }
+        .separator {
+            display: inline-block;
+            margin: 0 8px;
+        }
+
+        /* PDF/print behavior */
+        table {
+            -fs-table-paginate: paginate;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="receipt">
+
+    <div class="header">
+        <table class="header-table">
+            <tr>
+                <td class="property-name">NGOTHO CHEGE HOUSE</td>
+                <td class="address">P.O BOX 71775-00622, NAIROBI.</td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 class="receipt-title">RENT RECEIPT</h1>
+
+    <table class="info-table">
+        <tr>
+            <td class="label">Payment Method</td>
+            <td class="value">M-PESA</td>
+            <td class="label">Payment Method</td>
+            <td class="value">Paybill 522533</td>
+        </tr>
+        <tr>
+            <td class="label-right">Phone Number</td>
+            <td class="value-right">0728619360</td>
+            <td class="label-right">Account Number</td>
+            <td class="value-right">6342782#House No</td>
+        </tr>
+    </table>
+
+    <div class="section">
+        <div class="section-title">Payment Details</div>
+
+        <table class="details-table">
+            <tr>
+                <td class="details-label">Receipt Number</td>
+                <td class="details-value" th:text="${receiptNumber}"></td>
+            </tr>
+            <tr>
+                <td class="details-label">Tenant Name</td>
+                <td class="details-value" th:text="${tenantName}"></td>
+            </tr>
+            <tr>
+                <td class="details-label">House No</td>
+                <td class="details-value" th:text="${houseNo}"></td>
+            </tr>
+            <tr>
+                <td class="details-label">Month</td>
+                <td class="details-value" th:text="${month}"></td>
+            </tr>
+            <tr>
+                <td class="details-label">Rent Per Month</td>
+                <td class="details-value highlight-value" th:text="${rentPerMonth}"></td>
+            </tr>
+            <tr>
+                <td class="details-label">Water Bill Per Month</td>
+                <td class="details-value" th:text="${waterBill}"></td>
+            </tr>
+            <tr>
+                <td class="details-label">Garbage Bill Per Month</td>
+                <td class="details-value"></td>
+            </tr>
+            <tr>
+                <td class="details-label">Rent Arrears Brought Forward</td>
+                <td class="details-value" th:text="${arrearsBroughtForward}"></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Cash Collected Per Month</div>
+
+        <table class="collections-table">
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th class="amount">Amount (Kshs)</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="entry : ${weekly}">
+                <td th:text="${entry.weekName}"></td>
+                <td class="amount" th:text="${entry.amount}"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <table class="totals-table">
+            <tr class="total-primary">
+                <td class="total-label">Total Rent Collected</td>
+                <td class="total-value" th:text="${totalCollected}"></td>
+            </tr>
+            <tr class="total-secondary">
+                <td class="total-label">Rent Arrears Carried Forward</td>
+                <td class="total-value" th:text="${arrearsCarriedForward}"></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer">
+        <table class="footer-table">
+            <tr>
+                <td>
+                    <span class="footer-label">Signature:</span>
+                    <span class="signature-line"></span>
+                </td>
+                <td>
+                    <span class="footer-label">Date:</span>
+                    <span class="date-line"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" class="stamp">
+                    <span class="footer-label">Stamp:</span>
+                    <span class="stamp-line"></span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</div>
+</body>
+</html>

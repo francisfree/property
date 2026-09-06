@@ -3,6 +3,7 @@ package com.castle.property.controller;
 import com.castle.property.PropertyApplicationTests;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -223,8 +224,43 @@ public class PaymentControllerTests extends PropertyApplicationTests {
                 .extract().response();
 
         long totalElements = response.jsonPath().getLong("totalElements");
-        org.junit.Assert.assertTrue("expected at least one monthly payment to be persisted",
-                totalElements >= 1);
+        org.junit.Assert.assertTrue("expected at least one monthly payment to be persisted", totalElements >= 1);
+
+        String publicId = response.jsonPath().getString("content[0].publicId");
+
+        Response receiptResponse = given()
+                .auth().oauth2(token)
+                .get(baseUrl + "/{paymentMonthId}/receipt", publicId)
+                .andReturn();
+
+        Assert.assertEquals(200, receiptResponse.statusCode());
+        saveExport(receiptResponse, "Receipt_01.pdf");
+
+        Response listAfterReceipt = given()
+                .auth().oauth2(token)
+                .queryParam("revisionCount", 1)
+                .queryParam("month", "2026-08")
+                .queryParam("blockName", "Block B")
+                .when()
+                .get(baseUrl)
+                .then().log().all()
+                .statusCode(200)
+                .extract().response();
+
+        String receiptNumber = listAfterReceipt.jsonPath().getString("content[0].receiptNumber");
+        org.junit.Assert.assertTrue("expected a receipt number to be assigned after download",
+                receiptNumber != null && receiptNumber.startsWith("RPT-"));
+
+        Response singleResponse = given()
+                .auth().oauth2(token)
+                .get(baseUrl + "/{publicId}", publicId)
+                .then().log().all()
+                .statusCode(200)
+                .extract().response();
+
+        Assert.assertEquals(publicId, singleResponse.jsonPath().getString("publicId"));
+        Assert.assertEquals(receiptNumber, singleResponse.jsonPath().getString("receiptNumber"));
+        Assert.assertTrue(singleResponse.jsonPath().getString("houseNumber") != null);
     }
 
     private File loadPaymentTestFile() throws Exception {

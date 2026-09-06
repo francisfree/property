@@ -11,6 +11,7 @@ public record PaymentMonthResponse(
         Long id,
         UUID publicId,
         LocalDateTime dateCreated,
+        String receiptNumber,
         LocalDate month,
         String blockName,
         String houseNumber,

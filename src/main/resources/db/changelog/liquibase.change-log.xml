@@ -271,11 +271,18 @@
 
     <changeSet id="20250102 00:01" author="francis">
         <preConditions>
+            <tableExists tableName="rental_payments"/>
+        </preConditions>
+        <dropTable tableName="rental_payments"/>
+    </changeSet>
+
+    <changeSet id="20250102 00:02" author="francis">
+        <preConditions>
             <not>
-                <tableExists tableName="payment_months"/>
+                <tableExists tableName="rental_payments"/>
             </not>
         </preConditions>
-        <createTable tableName="payment_months">
+        <createTable tableName="rental_payments">
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true"/>
             </column>
@@ -286,6 +293,7 @@
             <column name="modified_by" type="varchar(250)"/>
             <column name="deleted" type="boolean" defaultValueBoolean="false"/>
             <column name="revision_count" type="integer"/>
+            <column name="receipt_number" type="varchar(250)"/>
             <column name="entry_month" type="date"/>
             <column name="block_name" type="varchar(250)"/>
             <column name="house_no" type="varchar(250)"/>
@@ -303,7 +311,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20250102 00:02" author="francis">
+    <changeSet id="20250102 00:03" author="francis">
         <preConditions>
             <not>
                 <tableExists tableName="payment_weekly_entry"/>
@@ -324,8 +332,33 @@
             <column name="cash" type="varchar(250)"/>
             <column name="till" type="varchar(250)"/>
             <column name="mpesa" type="varchar(250)"/>
-            <column name="payment_month_id" type="bigint">
-                <constraints foreignKeyName="fk_payment_month_id_table_payment_weekly_entry" referencedColumnNames="id" referencedTableName="payment_months"/>
+            <column name="rental_payment_id" type="bigint">
+                <constraints foreignKeyName="fk_rental_payment_id_table_payment_weekly_entry" referencedColumnNames="id" referencedTableName="rental_payments"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20250103 00:01" author="francis">
+        <preConditions>
+            <not>
+                <tableExists tableName="counters"/>
+            </not>
+        </preConditions>
+        <createTable tableName="counters">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="public_id" type="uuid"/>
+            <column name="date_created" type="timestamp"/>
+            <column name="date_modified" type="timestamp"/>
+            <column name="created_by" type="varchar(250)"/>
+            <column name="modified_by" type="varchar(250)"/>
+            <column name="deleted" type="boolean" defaultValueBoolean="false"/>
+            <column name="counter_type" type="varchar(250)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current" type="integer">
+                <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
