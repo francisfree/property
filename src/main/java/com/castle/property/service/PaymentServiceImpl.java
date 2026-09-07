@@ -1,9 +1,11 @@
 package com.castle.property.service;
 
 import com.castle.property.application.config.exception.ApplicationOperationException;
-import com.castle.property.entity.PaymentMonth;
+import com.castle.property.dto.RentalPaymentResponse;
+import com.castle.property.entity.RentalPayment;
 import com.castle.property.entity.PaymentWeeklyEntry;
-import com.castle.property.repository.PaymentMonthRepository;
+import com.castle.property.mapper.RentalPaymentMapper;
+import com.castle.property.repository.RentalPaymentRepository;
 import com.castle.property.repository.PaymentWeeklyEntryRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -40,7 +42,7 @@ public class PaymentServiceImpl implements PaymentService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    private final PaymentMonthRepository paymentMonthRepository;
+    private final RentalPaymentRepository rentalPaymentRepository;
     private final PaymentWeeklyEntryRepository paymentWeeklyEntryRepository;
 
     private boolean validateHeaderRow(Row row, DataFormatter dataFormatter) {
@@ -76,7 +78,7 @@ public class PaymentServiceImpl implements PaymentService {
         return weeklyEntries;
     }
 
-    private List<Predicate> createPredicates(Integer revisionCount, YearMonth yearMonth, String blockName, String searchParam, CriteriaBuilder cb, Root<PaymentMonth> root) {
+    private List<Predicate> createPredicates(Integer revisionCount, YearMonth yearMonth, String blockName, String searchParam, CriteriaBuilder cb, Root<RentalPayment> root) {
         final List<Predicate> andPredicates = new ArrayList<>();
 
         Predicate deletedPredicate = cb.equal(root.get("deleted"), Boolean.FALSE);
@@ -127,7 +129,7 @@ public class PaymentServiceImpl implements PaymentService {
             int weeklyEntryStartIndexColumn = weeklyEntriesColumIndexes.get(0);
             int weeklyEntryLastIndexColumn = weeklyEntriesColumIndexes.get(weeklyEntriesColumIndexes.size() - 1);
 
-            List<PaymentMonth> monthlyList = new ArrayList<>();
+            List<RentalPayment> monthlyList = new ArrayList<>();
 
 
             for (int rowIndex = 0; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
@@ -136,31 +138,31 @@ public class PaymentServiceImpl implements PaymentService {
                 Row row = sheet.getRow(rowIndex);
                 boolean headerRow = validateHeaderRow(row, dataFormatter);
                 if (!headerRow) {
-                    PaymentMonth paymentMonth = new PaymentMonth();
-                    paymentMonth.setHouseNumber(dataFormatter.formatCellValue(row.getCell(columnIndex), evaluator).trim());
-                    paymentMonth.setOccupantName(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
-                    paymentMonth.setOccupantPhoneNumber(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
-                    paymentMonth.setRentCurrentMonth(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
-                    paymentMonth.setRentPreviousMonth(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
-                    paymentMonth.setArrearsBroughtForward(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    RentalPayment rentalPayment = new RentalPayment();
+                    rentalPayment.setHouseNumber(dataFormatter.formatCellValue(row.getCell(columnIndex), evaluator).trim());
+                    rentalPayment.setOccupantName(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setOccupantPhoneNumber(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setRentCurrentMonth(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setRentPreviousMonth(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setArrearsBroughtForward(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
 
-                    if (paymentMonth.getHouseNumber().isBlank() &&
-                            paymentMonth.getOccupantName().isBlank() &&
-                            paymentMonth.getOccupantPhoneNumber().isBlank() &&
-                            paymentMonth.getRentCurrentMonth().isBlank() &&
-                            paymentMonth.getRentPreviousMonth().isBlank()) {
+                    if (rentalPayment.getHouseNumber().isBlank() &&
+                            rentalPayment.getOccupantName().isBlank() &&
+                            rentalPayment.getOccupantPhoneNumber().isBlank() &&
+                            rentalPayment.getRentCurrentMonth().isBlank() &&
+                            rentalPayment.getRentPreviousMonth().isBlank()) {
                         break;
                     }
 
                     if (++columnIndex == weeklyEntryStartIndexColumn) {
                         columnIndex = weeklyEntryLastIndexColumn;
                     }
-                    paymentMonth.setTotalPayment(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
-                    paymentMonth.setPreviousWaterUnit(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
-                    paymentMonth.setCurrentWaterUnit(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
-                    paymentMonth.setPricePerUnit(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
-                    paymentMonth.setUnitsConsumed(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
-                    paymentMonth.setWaterBill(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setTotalPayment(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setPreviousWaterUnit(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setCurrentWaterUnit(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setPricePerUnit(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setUnitsConsumed(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setWaterBill(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
 
                     //extract weeklyEntries
                     int weeklyRowIndex = rowIndex;
@@ -171,23 +173,23 @@ public class PaymentServiceImpl implements PaymentService {
                         Row weeklyRow3 = sheet.getRow(weeklyRowIndex + 2);
 
                         PaymentWeeklyEntry paymentWeeklyEntry = new PaymentWeeklyEntry();
-                        paymentWeeklyEntry.setPaymentMonth(paymentMonth);
+                        paymentWeeklyEntry.setRentalPayment(rentalPayment);
                         paymentWeeklyEntry.setWeekName(weekName);
                         paymentWeeklyEntry.setWeekCount(weekCount.incrementAndGet());
                         paymentWeeklyEntry.setCash(extractValueAmount(weeklyColumIndex, dataFormatter, weeklyRow1, evaluator));
                         paymentWeeklyEntry.setTill(extractValueAmount(weeklyColumIndex, dataFormatter, weeklyRow2, evaluator));
                         paymentWeeklyEntry.setMpesa(extractValueAmount(weeklyColumIndex, dataFormatter, weeklyRow3, evaluator));
 
-                        paymentMonth.getWeeklyList().add(paymentWeeklyEntry);
+                        rentalPayment.getWeeklyEntries().add(paymentWeeklyEntry);
                     });
 
-                    monthlyList.add(paymentMonth);
+                    monthlyList.add(rentalPayment);
                     rowIndex += 2;
                 }
             }
 
             LocalDate localDateMonth =  LocalDate.of(month.getYear(), month.getMonthValue(), 1);
-            Integer current = paymentMonthRepository.countByMonthAndBlockNameIgnoreCase(localDateMonth, blockName);
+            Integer current = rentalPaymentRepository.countByMonthAndBlockNameIgnoreCase(localDateMonth, blockName);
             int revisionCount =(current == null ? 0 : current) + 1;
 
             monthlyList.forEach(paymentMonthly -> {
@@ -196,7 +198,7 @@ public class PaymentServiceImpl implements PaymentService {
                 paymentMonthly.setBlockName(blockName);
             });
 
-            List<PaymentMonth> savedMonthlyList = paymentMonthRepository.saveAll(monthlyList);
+            List<RentalPayment> savedMonthlyList = rentalPaymentRepository.saveAll(monthlyList);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -212,13 +214,20 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Page<PaymentMonth> getMonthlyPayments(Integer revisionCount, YearMonth yearMonth, String blockName, String searchParam, PageRequest pageRequest) {
+    public RentalPaymentResponse getMonthlyPayment(UUID publicId) {
+        RentalPayment rentalPayment = rentalPaymentRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ApplicationOperationException("operation.record.not.found"));
+        return RentalPaymentMapper.toResponse(rentalPayment);
+    }
+
+    @Override
+    public Page<RentalPayment> getMonthlyPayments(Integer revisionCount, YearMonth yearMonth, String blockName, String searchParam, PageRequest pageRequest) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<PaymentMonth> mainQuery = cb.createQuery(PaymentMonth.class);
-        Root<PaymentMonth> root = mainQuery.from(PaymentMonth.class);
+        CriteriaQuery<RentalPayment> mainQuery = cb.createQuery(RentalPayment.class);
+        Root<RentalPayment> root = mainQuery.from(RentalPayment.class);
 
         CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-        Root<PaymentMonth> countRoot = countQuery.from(PaymentMonth.class);
+        Root<RentalPayment> countRoot = countQuery.from(RentalPayment.class);
 
         mainQuery.distinct(true);
 
@@ -227,11 +236,11 @@ public class PaymentServiceImpl implements PaymentService {
 
         mainQuery.where(mainQueryPredicates.toArray(new Predicate[mainQueryPredicates.size()])).orderBy(cb.asc(root.get("id")));
 
-        TypedQuery<PaymentMonth> query = entityManager
+        TypedQuery<RentalPayment> query = entityManager
                 .createQuery(mainQuery)
                 .setMaxResults(pageRequest.getPageSize())
                 .setFirstResult(pageRequest.getPageNumber() * pageRequest.getPageSize());
-        List<PaymentMonth> queryResultList = query.getResultList();
+        List<RentalPayment> queryResultList = query.getResultList();
 
         countQuery.select(cb.count(countRoot));
         countQuery.where(countQueryPredicates.toArray(new Predicate[countQueryPredicates.size()]));
@@ -243,12 +252,12 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Set<String> getBlockNamesByYearMonth(YearMonth yearMonth) {
         LocalDate localDateMonth =  LocalDate.of(yearMonth.getYear(), yearMonth.getMonthValue(), 1);
-        return paymentMonthRepository.getBlockNameDistinctByMonth(localDateMonth);
+        return rentalPaymentRepository.getBlockNameDistinctByMonth(localDateMonth);
     }
 
     @Override
     public Set<Integer> getRevisionCountByYearMonthAndBlockName(YearMonth yearMonth, String blockName) {
         LocalDate localDateMonth =  LocalDate.of(yearMonth.getYear(), yearMonth.getMonthValue(), 1);
-        return paymentMonthRepository.getRevisionDistinctByMonth(localDateMonth, blockName);
+        return rentalPaymentRepository.getRevisionDistinctByMonth(localDateMonth, blockName);
     }
 }

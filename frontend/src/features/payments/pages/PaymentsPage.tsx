@@ -35,14 +35,16 @@ export function PaymentsPage() {
 
   const hasFilters = month !== "" || blockName !== "" || revisionCount !== "" || search !== ""
 
-  const { data, isFetching, isError } = usePayments({
+  const queryParams = {
     page,
     size: PAGE_SIZE,
     month: month,
     blockName: blockName,
     revisionCount: revisionCount !== "" ? Number(revisionCount) : 0,
     searchParam: search || undefined,
-  })
+  }
+
+  const { data, isFetching, isError } = usePayments(queryParams)
 
   const uploadMutation = useUploadPayment()
 
@@ -194,6 +196,7 @@ export function PaymentsPage() {
         <PaymentTable
           data={data?.content}
           loading={isFetching}
+          queryParams={queryParams}
           pagination={
             data
               ? {

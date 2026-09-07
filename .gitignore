@@ -57,3 +57,10 @@ pnpm-debug.log*
 ### OS / IDE noise ###
 Thumbs.db
 .DS_Store
+
+### Office temp / lock files ###
+~$*
+
+#test downloads
+src/test/resources/downloads/
+

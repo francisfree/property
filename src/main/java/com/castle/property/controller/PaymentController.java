@@ -1,17 +1,23 @@
 package com.castle.property.controller;
 
+import com.castle.property.application.config.exception.ApplicationOperationException;
 import com.castle.property.dto.PagedResponse;
-import com.castle.property.dto.PaymentMonthResponse;
-import com.castle.property.entity.PaymentMonth;
-import com.castle.property.mapper.PaymentMapper;
+import com.castle.property.dto.RentalPaymentResponse;
+import com.castle.property.dto.ReceiptsRequest;
+import com.castle.property.entity.RentalPayment;
+import com.castle.property.mapper.RentalPaymentMapper;
 import com.castle.property.service.PaymentService;
+import com.castle.property.service.ReceiptService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.YearMonth;
 import java.util.Collections;
 import java.util.Set;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/payments")
@@ -26,6 +33,7 @@ import java.util.Set;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final ReceiptService receiptService;
 
     @Transactional(timeout = 600)
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -44,18 +52,18 @@ public class PaymentController {
     }
 
     @GetMapping
-    public PagedResponse<PaymentMonthResponse> getMonthlyPayments(@RequestParam(defaultValue = "0") int page,
-                                                                  @RequestParam(defaultValue = "25") int size,
-                                                                  @RequestParam(name = "revisionCount", required = false) Integer revisionCount,
-                                                                  @RequestParam(name = "month", required = false) YearMonth yearMonth,
-                                                                  @RequestParam(name = "blockName", required = false) String blockName,
-                                                                  @RequestParam(name = "searchParam", required = false) String searchParam) {
+    public PagedResponse<RentalPaymentResponse> getMonthlyPayments(@RequestParam(defaultValue = "0") int page,
+                                                                   @RequestParam(defaultValue = "25") int size,
+                                                                   @RequestParam(name = "revisionCount", required = false) Integer revisionCount,
+                                                                   @RequestParam(name = "month", required = false) YearMonth yearMonth,
+                                                                   @RequestParam(name = "blockName", required = false) String blockName,
+                                                                   @RequestParam(name = "searchParam", required = false) String searchParam) {
 
         if (revisionCount == null || yearMonth == null || blockName == null) {
             return new PagedResponse<>(Collections.emptyList(), 0, 0, 0, 0);
         }
-        Page<PaymentMonth> result = paymentService.getMonthlyPayments(revisionCount, yearMonth, blockName, searchParam, PageRequest.of(page, size));
-        return PagedResponse.of(result.map(PaymentMapper::toResponse));
+        Page<RentalPayment> result = paymentService.getMonthlyPayments(revisionCount, yearMonth, blockName, searchParam, PageRequest.of(page, size));
+        return PagedResponse.of(result.map(RentalPaymentMapper::toResponse));
     }
 
     @GetMapping(value = "filters/blockNames")
@@ -67,5 +75,44 @@ public class PaymentController {
     public Set<Integer> getFiltersRevisionCount(@RequestParam(name = "month") YearMonth yearMonth,
                                                 @RequestParam(name = "blockName") String blockName) {
         return paymentService.getRevisionCountByYearMonthAndBlockName(yearMonth, blockName);
+    }
+
+    @GetMapping(value = "/{publicId}")
+    public RentalPaymentResponse getMonthlyPayment(@PathVariable UUID publicId) {
+        return paymentService.getMonthlyPayment(publicId);
+    }
+
+    @GetMapping(value = "/receipts/{paymentMonthPublicId}", produces = MediaType.APPLICATION_PDF_VALUE)
+    @Operation(summary = "Download Rent Receipt PDF", description = "Generates and downloads the rent receipt PDF from a PaymentMonth record",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "404", description = "Not Found", content = @Content),
+            })
+    public ResponseEntity<byte[]> downloadReceipt(@PathVariable UUID paymentMonthPublicId) {
+        byte[] pdf = receiptService.generatePaymentReceipt(paymentMonthPublicId);
+        RentalPaymentResponse rentalPaymentResponse = paymentService.getMonthlyPayment(paymentMonthPublicId);
+        String filename = "receipt-" + rentalPaymentResponse.receiptNumber() + ".pdf";
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(filename).build().toString())
+                .body(pdf);
+    }
+
+    @PostMapping(value = "/receipts", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_PDF_VALUE)
+    @Operation(summary = "Download Combined Rent Receipts PDF", description = "Generates and downloads a single PDF containing the rent receipts for the given PaymentMonth records",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "404", description = "Not Found", content = @Content),
+            })
+    public ResponseEntity<byte[]> downloadReceipts(@RequestBody ReceiptsRequest request) {
+        if (request.publicIds() == null || request.publicIds().isEmpty()) {
+            throw new ApplicationOperationException("operation.record.not.found");
+        }
+        byte[] pdf = receiptService.generatePaymentReceipts(request.publicIds());
+        String filename = "receipts-" + request.publicIds().size() + ".pdf";
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(filename).build().toString())
+                .body(pdf);
     }
 }

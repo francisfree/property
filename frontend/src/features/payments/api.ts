@@ -55,3 +55,36 @@ export async function fetchRevisionCounts(
     params: { month, blockName },
   })
 }
+
+export async function fetchPaymentReceipt(publicId: string): Promise<Blob> {
+  return apiGet<Blob>(`/payments/receipts/${publicId}`, {
+    responseType: "blob",
+  })
+}
+
+export async function fetchPaymentReceipts(publicIds: string[]): Promise<Blob> {
+  return apiPost<Blob>(
+    "/payments/receipts",
+    { publicIds },
+    { responseType: "blob" },
+  )
+}
+
+export async function fetchAllPaymentIds(
+  params: Omit<PaymentQueryParams, "page" | "size">,
+): Promise<string[]> {
+  const first = await fetchPayments({ ...params, page: 0, size: 25 })
+  const totalPages = Math.max(0, first.totalPages)
+  const rest =
+    totalPages <= 1
+      ? []
+      : await Promise.all(
+          Array.from({ length: totalPages - 1 }, (_, i) =>
+            fetchPayments({ ...params, page: i + 1, size: 25 }),
+          ),
+        )
+  return [
+    ...first.content.map((p) => p.publicId),
+    ...rest.flatMap((page) => page.content.map((p) => p.publicId)),
+  ]
+}
