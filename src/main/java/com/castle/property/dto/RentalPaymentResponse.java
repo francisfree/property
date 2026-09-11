@@ -17,15 +17,18 @@ public record RentalPaymentResponse(
         String houseNumber,
         String occupantName,
         String occupantPhoneNumber,
-        String rentCurrentMonth,
-        String rentPreviousMonth,
+        String rent,
+        String garbage,
+        String totalRentPaidPreviousMonth,
         String arrearsBroughtForward,
-        String totalPayment,
+        String totalRentDue,
+        String totalRentPaid,
         String previousWaterUnit,
         String currentWaterUnit,
-        String pricePerUnit,
         String unitsConsumed,
+        String pricePerUnit,
         String waterBill,
+        String arrearsCarriedForward,
         List<PaymentWeeklyEntryResponse> weeklyEntries
 ) {
 }

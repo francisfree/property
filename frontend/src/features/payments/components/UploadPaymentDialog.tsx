@@ -36,6 +36,10 @@ export function UploadPaymentDialog({
   const handleSubmit = () => {
     if (!canSubmit) return
     onSubmit(file, month, blockName.trim())
+    setFile(null)
+    setMonth("")
+    setBlockName("")
+    if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
   const handleOpenChange = (nextOpen: boolean) => {

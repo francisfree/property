@@ -38,21 +38,30 @@ public class RentalPayment extends AbstractAuditableActivityEntity {
     @Column(name = "occupant_phone_number")
     private String occupantPhoneNumber;
 
-    @Column(name = "rent_current_month")
-    private String rentCurrentMonth;
+    @Column(name = "rent")
+    private String rent;
 
-    @Column(name = "rent_previous_month")
-    private String rentPreviousMonth;
+    @Column(name = "garbage")
+    private String garbage;
+
+    @Column(name = "total_rent_paid_previous_month")
+    private String totalRentPaidPreviousMonth;
 
     @Column(name = "arrears_b_f")
     private String arrearsBroughtForward;
 
+    @Column(name = "total_rent_due")
+    private String totalRentDue;
+
+    @Column(name = "arrears_c_f")
+    private String arrearsCarriedForward;
+
     @OneToMany(mappedBy = "rentalPayment", cascade = CascadeType.PERSIST)
     @OrderBy("id")
-    private List<PaymentWeeklyEntry> weeklyEntries = new ArrayList<>();
+    private List<RentalPaymentWeekly> weeklyEntries = new ArrayList<>();
 
-    @Column(name = "total_payment")
-    private String totalPayment;
+    @Column(name = "total_rent_paid")
+    private String totalRentPaid;
 
     @Column(name = "previous_water_unit")
     private String previousWaterUnit;
@@ -60,27 +69,27 @@ public class RentalPayment extends AbstractAuditableActivityEntity {
     @Column(name = "current_water_unit")
     private String currentWaterUnit;
 
-    @Column(name = "price_per_unit")
-    private String pricePerUnit;
-
     @Column(name = "units_consumed")
     private String unitsConsumed;
+
+    @Column(name = "price_per_unit")
+    private String pricePerUnit;
 
     @Column(name = "water_bill")
     private String waterBill;
 
-    public String getTotalPayment() {
+    public String getTotalRentPaid() {
         try {
-            if (totalPayment != null) {
-                BigDecimal userAmount = new BigDecimal(totalPayment);
-                if (userAmount.compareTo(BigDecimal.ZERO) > 0) {
-                    return totalPayment;
+            if (totalRentPaid != null) {
+                BigDecimal userValue = new BigDecimal(totalRentPaid);
+                if (userValue.compareTo(BigDecimal.ZERO) > 0) {
+                    return totalRentPaid;
                 }
             }
         } catch (Exception ignore) {
         }
         BigDecimal totalPaymentAmount = weeklyEntries.stream()
-                .map(PaymentWeeklyEntry::getTotalWeeklyAmount)
+                .map(RentalPaymentWeekly::getTotalWeeklyAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return totalPaymentAmount.toString();

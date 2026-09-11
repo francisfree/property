@@ -30,15 +30,20 @@ import {
   type PaymentQueryParams,
 } from "../api"
 import { downloadBlob, printBlob } from "../receipt"
-import type { PaymentMonth } from "../types"
+import type { RentalPayment } from "../types"
 
-const COLUMN_COUNT = 13
+const COLUMN_COUNT = 16
 const COLSPAN = COLUMN_COUNT + 1
+
+const STICKY_WIDTHS = [40, 64, 128, 192, 128, 112]
+const STICKY_OFFSETS = STICKY_WIDTHS.map((_, i) =>
+  STICKY_WIDTHS.slice(0, i).reduce((sum, width) => sum + width, 0),
+)
 
 type BusyAction = "download" | "print" | "selectAll" | null
 
 interface PaymentTableProps {
-  data: PaymentMonth[] | undefined
+  data: RentalPayment[] | undefined
   loading: boolean
   pagination?: DataTablePagination
   queryParams: PaymentQueryParams
@@ -111,6 +116,7 @@ export function PaymentTable({
         toast.success(
           `Downloaded ${selectedIds.length} receipt${selectedIds.length === 1 ? "" : "s"}`,
         )
+        clearSelection()
       } else {
         const printWin = window.open("", "_blank")
         try {
@@ -119,6 +125,7 @@ export function PaymentTable({
               ? await fetchPaymentReceipt(selectedIds[0])
               : await fetchPaymentReceipts(selectedIds)
           printBlob(blob, printWin)
+          clearSelection()
         } catch (printError) {
           printWin?.close()
           throw printError
@@ -145,22 +152,54 @@ export function PaymentTable({
     return (
       <div className="space-y-4">
         <div className="rounded-md border">
-          <Table>
+          <Table className="min-w-[1400px]">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-10" />
-                <TableHead>No</TableHead>
-                <TableHead>Receipt No</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Rent (Current)</TableHead>
-                <TableHead>Rent (Previous)</TableHead>
+                <TableHead
+                  className="sticky z-20 bg-background w-10 whitespace-nowrap"
+                  style={{ left: `${STICKY_OFFSETS[0]}px` }}
+                />
+                <TableHead
+                  className="sticky z-20 bg-background w-16 whitespace-nowrap"
+                  style={{ left: `${STICKY_OFFSETS[1]}px` }}
+                >
+                  No
+                </TableHead>
+                <TableHead
+                  className="sticky z-20 bg-background w-32 whitespace-nowrap"
+                  style={{ left: `${STICKY_OFFSETS[2]}px` }}
+                >
+                  Receipt No
+                </TableHead>
+                <TableHead
+                  className="sticky z-20 bg-background w-48 whitespace-nowrap truncate"
+                  style={{ left: `${STICKY_OFFSETS[3]}px` }}
+                >
+                  Name
+                </TableHead>
+                <TableHead
+                  className="sticky z-20 bg-background w-32 whitespace-nowrap"
+                  style={{ left: `${STICKY_OFFSETS[4]}px` }}
+                >
+                  Phone
+                </TableHead>
+                <TableHead
+                  className="sticky z-20 bg-background w-28 whitespace-nowrap"
+                  style={{ left: `${STICKY_OFFSETS[5]}px` }}
+                >
+                  Rent
+                </TableHead>
+                <TableHead>Garbage</TableHead>
+                <TableHead>Paid Previous Month</TableHead>
                 <TableHead>Arrears B/F</TableHead>
-                <TableHead>Total Payment</TableHead>
+                <TableHead>Total Rent Due</TableHead>
+                <TableHead>Total Rent Paid</TableHead>
                 <TableHead>Prev Water Unit</TableHead>
                 <TableHead>Curr Water Unit</TableHead>
                 <TableHead>Price/Unit</TableHead>
+                <TableHead>Consumed Units</TableHead>
                 <TableHead>Water Bill</TableHead>
+                <TableHead>Arrears C/F</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -183,10 +222,13 @@ export function PaymentTable({
   return (
     <div className="space-y-4">
       <div className="rounded-md border">
-        <Table>
+        <Table className="min-w-[1400px]">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-10">
+              <TableHead
+                className="sticky z-20 bg-background w-10 whitespace-nowrap"
+                style={{ left: `${STICKY_OFFSETS[0]}px` }}
+              >
                 <div className="flex items-center justify-center">
                   {busy === "selectAll" ? (
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -201,19 +243,47 @@ export function PaymentTable({
                   )}
                 </div>
               </TableHead>
-              <TableHead>No</TableHead>
-              <TableHead>Receipt No</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Rent (Current)</TableHead>
-              <TableHead>Rent (Previous)</TableHead>
+              <TableHead
+                className="sticky z-20 bg-background w-16 whitespace-nowrap"
+                style={{ left: `${STICKY_OFFSETS[1]}px` }}
+              >
+                No
+              </TableHead>
+              <TableHead
+                className="sticky z-20 bg-background w-32 whitespace-nowrap"
+                style={{ left: `${STICKY_OFFSETS[2]}px` }}
+              >
+                Receipt No
+              </TableHead>
+              <TableHead
+                className="sticky z-20 bg-background w-48 whitespace-nowrap truncate"
+                style={{ left: `${STICKY_OFFSETS[3]}px` }}
+              >
+                Name
+              </TableHead>
+              <TableHead
+                className="sticky z-20 bg-background w-32 whitespace-nowrap"
+                style={{ left: `${STICKY_OFFSETS[4]}px` }}
+              >
+                Phone
+              </TableHead>
+              <TableHead
+                className="sticky z-20 bg-background w-28 whitespace-nowrap"
+                style={{ left: `${STICKY_OFFSETS[5]}px` }}
+              >
+                Rent
+              </TableHead>
+              <TableHead>Garbage</TableHead>
+              <TableHead>Paid Previous Month</TableHead>
               <TableHead>Arrears B/F</TableHead>
-              <TableHead>Total Payment</TableHead>
+              <TableHead>Total Rent Due</TableHead>
+              <TableHead>Total Rent Paid</TableHead>
               <TableHead>Prev Water Unit</TableHead>
               <TableHead>Curr Water Unit</TableHead>
               <TableHead>Price/Unit</TableHead>
               <TableHead>Consumed Units</TableHead>
               <TableHead>Water Bill</TableHead>
+              <TableHead>Arrears C/F</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -321,7 +391,7 @@ function PaymentRow({
   onToggle,
   onToggleSelect,
 }: {
-  payment: PaymentMonth
+  payment: RentalPayment
   isExpanded: boolean
   isSelected: boolean
   busy: boolean
@@ -331,7 +401,10 @@ function PaymentRow({
   return (
     <>
       <TableRow>
-        <TableCell>
+        <TableCell
+          className="sticky z-10 bg-background whitespace-nowrap"
+          style={{ left: `${STICKY_OFFSETS[0]}px` }}
+        >
           <div className="flex items-center gap-1">
             <Checkbox
               checked={isSelected}
@@ -348,24 +421,47 @@ function PaymentRow({
             </Button>
           </div>
         </TableCell>
-        <TableCell>{payment.houseNumber}</TableCell>
-        <TableCell>{payment.receiptNumber ?? "—"}</TableCell>
-        <TableCell>{payment.occupantName}</TableCell>
-        <TableCell>{payment.occupantPhoneNumber}</TableCell>
-        <TableCell>
-          <span className="tabular-nums">{formatMoney(payment.rentCurrentMonth)}</span>
+        <TableCell
+          className="sticky z-10 bg-background whitespace-nowrap"
+          style={{ left: `${STICKY_OFFSETS[1]}px` }}
+        >
+          {payment.houseNumber}
+        </TableCell>
+        <TableCell
+          className="sticky z-10 bg-background whitespace-nowrap"
+          style={{ left: `${STICKY_OFFSETS[2]}px` }}
+        >
+          {payment.receiptNumber ?? "—"}
+        </TableCell>
+        <TableCell
+          className="sticky z-10 bg-background whitespace-nowrap truncate"
+          style={{ left: `${STICKY_OFFSETS[3]}px` }}
+        >
+          {payment.occupantName}
+        </TableCell>
+        <TableCell
+          className="sticky z-10 bg-background whitespace-nowrap"
+          style={{ left: `${STICKY_OFFSETS[4]}px` }}
+        >
+          {payment.occupantPhoneNumber}
+        </TableCell>
+        <TableCell
+          className="sticky z-10 bg-background whitespace-nowrap"
+          style={{ left: `${STICKY_OFFSETS[5]}px` }}
+        >
+          <span className="tabular-nums">{formatMoney(payment.rent)}</span>
         </TableCell>
         <TableCell>
-          <span className="tabular-nums">{formatMoney(payment.rentPreviousMonth)}</span>
+          <span className="tabular-nums">{formatMoney(payment.garbage)}</span>
         </TableCell>
         <TableCell>
-          <span className="tabular-nums">
-            {formatMoney(payment.arrearsBroughtForward)}
-          </span>
+          <span className="tabular-nums">{formatMoney(payment.totalRentPaidPreviousMonth)}</span>
         </TableCell>
         <TableCell>
-          <span className="tabular-nums">{formatMoney(payment.totalPayment)}</span>
+          <span className="tabular-nums">{formatMoney(payment.arrearsBroughtForward)}</span>
         </TableCell>
+        <TableCell>{payment.totalRentDue}</TableCell>
+        <TableCell>{payment.totalRentPaid}</TableCell>
         <TableCell>{payment.previousWaterUnit}</TableCell>
         <TableCell>{payment.currentWaterUnit}</TableCell>
         <TableCell>
@@ -374,6 +470,9 @@ function PaymentRow({
         <TableCell>{payment.unitsConsumed}</TableCell>
         <TableCell>
           <span className="tabular-nums">{formatMoney(payment.waterBill)}</span>
+        </TableCell>
+        <TableCell>
+          <span className="tabular-nums">{formatMoney(payment.arrearsCarriedForward)}</span>
         </TableCell>
       </TableRow>
       {isExpanded && payment.weeklyEntries.length > 0 && (
@@ -384,9 +483,10 @@ function PaymentRow({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Week</TableHead>
-                    <TableHead>Cash</TableHead>
-                    <TableHead>Till</TableHead>
-                    <TableHead>Mpesa</TableHead>
+                    <TableHead>Amount</TableHead>
+                    {/*<TableHead>Cash</TableHead>*/}
+                    {/*<TableHead>Till</TableHead>*/}
+                    {/*<TableHead>Mpesa</TableHead>*/}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -394,14 +494,17 @@ function PaymentRow({
                     <TableRow key={entry.id}>
                       <TableCell className="font-medium">{entry.weekName}</TableCell>
                       <TableCell>
-                        <span className="tabular-nums">{formatMoney(entry.cash)}</span>
+                        <span className="tabular-nums">{formatMoney(entry.totalPaid)}</span>
                       </TableCell>
-                      <TableCell>
-                        <span className="tabular-nums">{formatMoney(entry.till)}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="tabular-nums">{formatMoney(entry.mpesa)}</span>
-                      </TableCell>
+                      {/*<TableCell>*/}
+                      {/*  <span className="tabular-nums">{formatMoney(entry.cash)}</span>*/}
+                      {/*</TableCell>*/}
+                      {/*<TableCell>*/}
+                      {/*  <span className="tabular-nums">{formatMoney(entry.till)}</span>*/}
+                      {/*</TableCell>*/}
+                      {/*<TableCell>*/}
+                      {/*  <span className="tabular-nums">{formatMoney(entry.mpesa)}</span>*/}
+                      {/*</TableCell>*/}
                     </TableRow>
                   ))}
                 </TableBody>

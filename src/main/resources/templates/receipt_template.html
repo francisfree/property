@@ -127,7 +127,7 @@
         }
 
         .details-table td {
-            padding: 5pt 7pt;
+            padding: 4pt 6pt;
             border-bottom: 0.5pt solid #d5d5d5;
             vertical-align: middle;
         }
@@ -165,18 +165,6 @@
             font-weight: normal;
         }
 
-        /* Paybill emphasis */
-        .paybill {
-            margin: 9pt 0 12pt 0;
-            padding: 7pt 9pt;
-            border: 1px solid #555;
-            text-align: center;
-            font-weight: bold;
-            font-style: italic;
-            page-break-inside: avoid;
-            font-size: 25px;
-        }
-
         /* Weekly collection table */
         .collections-table {
             width: 100%;
@@ -186,7 +174,7 @@
         }
 
         .collections-table th {
-            padding: 6pt 7pt;
+            padding: 5pt 6pt;
             background: #fff;
             border-top: 1px solid #333;
             border-bottom: 1px solid #333;
@@ -204,7 +192,7 @@
         }
 
         .collections-table td {
-            padding: 5pt 7pt;
+            padding: 4pt 6pt;
             border-bottom: 0.5pt solid #d5d5d5;
         }
 
@@ -216,12 +204,12 @@
         .totals-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 9pt;
+            margin-top: 7pt;
             page-break-inside: avoid;
         }
 
         .totals-table td {
-            padding: 5pt 7pt;
+            padding: 4pt 6pt;
             vertical-align: middle;
         }
 
@@ -248,7 +236,7 @@
 
         /* Footer */
         .footer {
-            margin-top: 24pt;
+            margin-top: 8pt;
             page-break-inside: avoid;
         }
 
@@ -268,7 +256,7 @@
         .stamp-line {
             display: inline-block;
             min-width: 350px;
-            height: 16pt;
+            height: 14pt;
             border-bottom: 1px dotted #333;
             vertical-align: bottom;
         }
@@ -278,7 +266,7 @@
         }
 
         .stamp {
-            margin-top: 18pt;
+            margin-top: 16pt;
         }
 
         .stamp-line {
@@ -291,6 +279,66 @@
         .separator {
             display: inline-block;
             margin: 0 8px;
+        }
+
+        /* Watermark */
+        .watermark {
+            position: fixed;
+            top: 35%;
+            left: 10%;
+            width: 80%;
+            text-align: center;
+            transform: rotate(-30deg);
+            font-size: 60pt;
+            color: #f2f2f2;
+            opacity: 0.04;
+            z-index: -1;
+            pointer-events: none;
+            white-space: nowrap;
+            letter-spacing: 2pt;
+        }
+
+        .receipt {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header logo */
+        .logo {
+            display: inline-block;
+            width: 34px;
+            height: 26px;
+            vertical-align: middle;
+            margin-left: 8px;
+            position: relative;
+        }
+
+        .logo-roof {
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-left: 17px solid transparent;
+            border-right: 17px solid transparent;
+            border-bottom: 12px solid #222;
+        }
+
+        .logo-house {
+            position: absolute;
+            top: 12px;
+            left: 4px;
+            width: 26px;
+            height: 16px;
+            background: #222;
+        }
+
+        .logo-letters {
+            display: block;
+            color: #fff;
+            font-size: 6pt;
+            font-weight: bold;
+            line-height: 16px;
+            letter-spacing: 0.4px;
+            text-align: center;
         }
 
         /* PDF/print behavior */
@@ -309,11 +357,21 @@
 <body>
 <div class="receipt">
 
+    <div class="watermark">N.C.H</div>
+
     <div class="header">
         <table class="header-table">
             <tr>
                 <td class="property-name">NGOTHO CHEGE HOUSE</td>
-                <td class="address">P.O BOX 71775-00622, NAIROBI.</td>
+                <td class="address">
+                    <span>P.O BOX 71775-00622, NAIROBI.</span>
+                    <span class="logo" aria-hidden="true">
+                        <span class="logo-roof"></span>
+                        <span class="logo-house">
+                            <span class="logo-letters">N.C.H</span>
+                        </span>
+                    </span>
+                </td>
             </tr>
         </table>
     </div>
@@ -348,6 +406,10 @@
                 <td class="details-value" th:text="${tenantName}"></td>
             </tr>
             <tr>
+                <td class="details-label">Tenant PhoneNumber</td>
+                <td class="details-value" th:text="${tenantPhoneNumber}"></td>
+            </tr>
+            <tr>
                 <td class="details-label">House No</td>
                 <td class="details-value" th:text="${houseNo}"></td>
             </tr>
@@ -368,21 +430,26 @@
                     <span>Previous Units: <strong th:text="${previousWaterUnit}"></strong></span>
                     <span>Current Units: <strong th:text="${currentWaterUnit}"></strong></span>
                     <span>Consumed Units: <strong th:text="${unitsConsumed}"></strong></span>
+                    <span>Price Per Unit: <strong th:text="${pricePerUnit}"></strong></span>
                 </td>
             </tr>
             <tr>
                 <td class="details-label">Garbage Bill Per Month</td>
-                <td class="details-value"></td>
+                <td class="details-value" th:text="${garbage}"></td>
             </tr>
             <tr>
                 <td class="details-label">Rent Arrears Brought Forward</td>
                 <td class="details-value" th:text="${arrearsBroughtForward}"></td>
             </tr>
+            <tr>
+                <td class="details-label">Rent Due</td>
+                <td class="details-value" th:text="${rentDue}"></td>
+            </tr>
         </table>
     </div>
 
     <div class="section">
-        <div class="section-title">Cash Collected Per Month</div>
+        <div class="section-title">Weekly Payments</div>
 
         <table class="collections-table">
             <thead>

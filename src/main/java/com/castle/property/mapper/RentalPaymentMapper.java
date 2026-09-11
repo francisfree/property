@@ -28,7 +28,8 @@ public final class RentalPaymentMapper {
                         paymentWeekly.getWeekName(),
                         paymentWeekly.getCash(),
                         paymentWeekly.getTill(),
-                        paymentWeekly.getMpesa()
+                        paymentWeekly.getMpesa(),
+                        paymentWeekly.getTotalAmount()
                 )).collect(Collectors.toList());
 
         return new RentalPaymentResponse(
@@ -41,15 +42,18 @@ public final class RentalPaymentMapper {
                 rentalPayment.getHouseNumber(),
                 rentalPayment.getOccupantName(),
                 rentalPayment.getOccupantPhoneNumber(),
-                rentalPayment.getRentCurrentMonth(),
-                rentalPayment.getRentPreviousMonth(),
+                rentalPayment.getRent(),
+                rentalPayment.getGarbage(),
+                rentalPayment.getTotalRentPaidPreviousMonth(),
                 rentalPayment.getArrearsBroughtForward(),
-                rentalPayment.getTotalPayment(),
+                rentalPayment.getTotalRentDue(),
+                rentalPayment.getTotalRentPaid(),
                 rentalPayment.getPreviousWaterUnit(),
                 rentalPayment.getCurrentWaterUnit(),
-                rentalPayment.getPricePerUnit(),
                 rentalPayment.getUnitsConsumed(),
+                rentalPayment.getPricePerUnit(),
                 rentalPayment.getWaterBill(),
+                rentalPayment.getArrearsCarriedForward(),
                 weeklyEntries
         );
     }

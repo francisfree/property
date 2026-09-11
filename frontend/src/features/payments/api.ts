@@ -1,6 +1,6 @@
 import { apiGet, apiPost } from "@/lib/api-client"
 import type { PagedResponse } from "@/types/api"
-import type { PaymentMonth } from "./types"
+import type { RentalPayment } from "./types"
 
 export interface PaymentQueryParams {
   page: number
@@ -13,8 +13,8 @@ export interface PaymentQueryParams {
 
 export async function fetchPayments(
   params: PaymentQueryParams,
-): Promise<PagedResponse<PaymentMonth>> {
-  return apiGet<PagedResponse<PaymentMonth>>("/payments", {
+): Promise<PagedResponse<RentalPayment>> {
+  return apiGet<PagedResponse<RentalPayment>>("/payments", {
     params: {
       page: params.page,
       size: params.size,
