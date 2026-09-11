@@ -11,9 +11,9 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Entity
-@Table(name = "payment_weekly_entry")
+@Table(name = "rental_payment_weekly")
 @SQLRestriction("deleted = false")
-public class PaymentWeeklyEntry extends AbstractAuditableActivityEntity {
+public class RentalPaymentWeekly extends AbstractAuditableActivityEntity {
 
     @ManyToOne
     @JoinColumn(name = "rental_payment_id")
@@ -34,7 +34,13 @@ public class PaymentWeeklyEntry extends AbstractAuditableActivityEntity {
     @Column(name = "mpesa")
     private String mpesa;
 
+    @Column(name = "total_amount")
+    private String totalAmount;
+
     public BigDecimal getTotalWeeklyAmount() {
+        if (totalAmount != null) {
+            return parseMoney(getTotalAmount());
+        }
         return parseMoney(getCash())
                 .add(parseMoney(getTill()))
                 .add(parseMoney(getMpesa()));
@@ -61,5 +67,9 @@ public class PaymentWeeklyEntry extends AbstractAuditableActivityEntity {
 
     public String getMpesa() {
         return mpesa == null ? "0.00" : mpesa.trim();
+    }
+
+    public String getTotalAmount() {
+        return totalAmount == null ? "0.00" : totalAmount.trim();
     }
 }

@@ -299,14 +299,17 @@
             <column name="house_no" type="varchar(250)"/>
             <column name="occupant_name" type="varchar(250)"/>
             <column name="occupant_phone_number" type="varchar(250)"/>
-            <column name="rent_current_month" type="varchar(250)"/>
-            <column name="rent_previous_month" type="varchar(250)"/>
+            <column name="rent" type="varchar(250)"/>
+            <column name="garbage" type="varchar(250)"/>
+            <column name="total_rent_paid_previous_month" type="varchar(250)"/>
             <column name="arrears_b_f" type="varchar(250)"/>
-            <column name="total_payment" type="varchar(250)"/>
+            <column name="total_rent_due" type="varchar(250)"/>
+            <column name="total_rent_paid" type="varchar(250)"/>
+            <column name="arrears_c_f" type="varchar(250)"/>
             <column name="previous_water_unit" type="varchar(250)"/>
             <column name="current_water_unit" type="varchar(250)"/>
-            <column name="price_per_unit" type="varchar(250)"/>
             <column name="units_consumed" type="varchar(250)"/>
+            <column name="price_per_unit" type="varchar(250)"/>
             <column name="water_bill" type="varchar(250)"/>
         </createTable>
     </changeSet>
@@ -314,10 +317,10 @@
     <changeSet id="20250102 00:03" author="francis">
         <preConditions>
             <not>
-                <tableExists tableName="payment_weekly_entry"/>
+                <tableExists tableName="rental_payment_weekly"/>
             </not>
         </preConditions>
-        <createTable tableName="payment_weekly_entry">
+        <createTable tableName="rental_payment_weekly">
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true"/>
             </column>
@@ -332,8 +335,9 @@
             <column name="cash" type="varchar(250)"/>
             <column name="till" type="varchar(250)"/>
             <column name="mpesa" type="varchar(250)"/>
+            <column name="total_amount" type="varchar(250)"/>
             <column name="rental_payment_id" type="bigint">
-                <constraints foreignKeyName="fk_rental_payment_id_table_payment_weekly_entry" referencedColumnNames="id" referencedTableName="rental_payments"/>
+                <constraints foreignKeyName="fk_rental_payment_id_table_rental_payment_weekly" referencedColumnNames="id" referencedTableName="rental_payments"/>
             </column>
         </createTable>
     </changeSet>

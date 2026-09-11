@@ -3,7 +3,7 @@ package com.castle.property.service;
 import com.castle.property.application.config.exception.ApplicationOperationException;
 import com.castle.property.datatype.CounterType;
 import com.castle.property.entity.RentalPayment;
-import com.castle.property.entity.PaymentWeeklyEntry;
+import com.castle.property.entity.RentalPaymentWeekly;
 import com.castle.property.repository.RentalPaymentRepository;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle;
@@ -39,7 +39,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 
     private static final String TEMPLATE_NAME = "receipt_template";
     private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("MMMM yyyy");
-    private static final DecimalFormat DECIMAL_FORMATTER = new DecimalFormat("###,###.##");
+    private static final DecimalFormat DECIMAL_FORMATTER = new DecimalFormat("#,##0.00;(#,##0.00)");
     private static final Map<String, File> FONT_CACHE = new ConcurrentHashMap<>();
 
     private final RentalPaymentRepository rentalPaymentRepository;
@@ -137,21 +137,27 @@ public class ReceiptServiceImpl implements ReceiptService {
 
     private Map<String, Object> toModel(RentalPayment rentalPayment) {
         Map<String, Object> model = new LinkedHashMap<>();
+        String blockName = rentalPayment.getBlockName().toUpperCase().replaceAll("BLOCK", "").replaceAll(" ", "");
+        String houseNumber = String.format("%s%s", blockName, rentalPayment.getHouseNumber());
+
         model.put("receiptNumber", rentalPayment.getReceiptNumber());
         model.put("paymentNumber", rentalPayment.getOccupantPhoneNumber());
         model.put("tenantName", rentalPayment.getOccupantName());
-        model.put("houseNo", rentalPayment.getHouseNumber());
-        model.put("paybillHouseNo", rentalPayment.getHouseNumber());
+        model.put("tenantPhoneNumber", rentalPayment.getOccupantPhoneNumber());
+        model.put("houseNo", houseNumber);
         model.put("month", rentalPayment.getMonth() == null ? "" : rentalPayment.getMonth().format(MONTH_FORMATTER));
-        model.put("rentPerMonth", formatToNumericValue(rentalPayment.getRentCurrentMonth()));
-        model.put("waterBill", formatToNumericValue((rentalPayment.getWaterBill())));
-        model.put("previousWaterUnit", formatToNumericValue(rentalPayment.getPreviousWaterUnit()));
-        model.put("currentWaterUnit", formatToNumericValue(rentalPayment.getCurrentWaterUnit()));
-        model.put("unitsConsumed", formatToNumericValue(rentalPayment.getUnitsConsumed()));
+        model.put("rentPerMonth", formatToNumericValue(rentalPayment.getRent()));
+        model.put("waterBill", formatToNumericValue(rentalPayment.getWaterBill()));
+        model.put("previousWaterUnit", rentalPayment.getPreviousWaterUnit());
+        model.put("currentWaterUnit", rentalPayment.getCurrentWaterUnit());
+        model.put("unitsConsumed", rentalPayment.getUnitsConsumed());
+        model.put("pricePerUnit", formatToNumericValue(rentalPayment.getPricePerUnit()));
+        model.put("garbage", formatToNumericValue(rentalPayment.getGarbage()));
         model.put("arrearsBroughtForward", formatToNumericValue(rentalPayment.getArrearsBroughtForward()));
+        model.put("rentDue", formatToNumericValue(rentalPayment.getTotalRentDue()));
         model.put("weekly", toWeeklyModel(rentalPayment.getWeeklyEntries()));
-        model.put("totalCollected", formatToNumericValue((rentalPayment.getTotalPayment())));
-        model.put("arrearsCarriedForward", formatToNumericValue(rentalPayment.getArrearsBroughtForward()));
+        model.put("totalCollected", formatToNumericValue((rentalPayment.getTotalRentPaid())));
+        model.put("arrearsCarriedForward", formatToNumericValue(rentalPayment.getArrearsCarriedForward()));
         return model;
     }
 
@@ -168,9 +174,9 @@ public class ReceiptServiceImpl implements ReceiptService {
         return null;
     }
 
-    private List<Map<String, Object>> toWeeklyModel(List<PaymentWeeklyEntry> weeklyList) {
+    private List<Map<String, Object>> toWeeklyModel(List<RentalPaymentWeekly> weeklyList) {
         List<Map<String, Object>> weekly = new ArrayList<>();
-        for (PaymentWeeklyEntry weeklyEntry : weeklyList) {
+        for (RentalPaymentWeekly weeklyEntry : weeklyList) {
             Map<String, Object> entry = new LinkedHashMap<>();
             entry.put("weekName", weeklyEntry.getWeekName());
             entry.put("amount", formatToNumericValue(weeklyAmount(weeklyEntry)));
@@ -179,10 +185,8 @@ public class ReceiptServiceImpl implements ReceiptService {
         return weekly;
     }
 
-    private String weeklyAmount(PaymentWeeklyEntry weeklyEntry) {
-        return toNumber(weeklyEntry.getCash())
-                .add(toNumber(weeklyEntry.getTill()))
-                .add(toNumber(weeklyEntry.getMpesa()))
+    private String weeklyAmount(RentalPaymentWeekly weeklyEntry) {
+        return toNumber(weeklyEntry.getTotalAmount())
                 .stripTrailingZeros()
                 .toPlainString();
     }

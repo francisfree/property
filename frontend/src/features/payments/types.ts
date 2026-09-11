@@ -7,9 +7,10 @@ export interface PaymentWeeklyEntry {
   cash: string
   till: string
   mpesa: string
+  totalPaid: string
 }
 
-export interface PaymentMonth {
+export interface RentalPayment {
   id: number
   publicId: string
   dateCreated: string
@@ -19,14 +20,17 @@ export interface PaymentMonth {
   occupantName: string
   occupantPhoneNumber: string
   receiptNumber: string | null
-  rentCurrentMonth: string
-  rentPreviousMonth: string
+  rent: string
+  garbage: string
+  totalRentPaidPreviousMonth: string
   arrearsBroughtForward: string
-  totalPayment: string
+  totalRentDue: string
+  totalRentPaid: string
   previousWaterUnit: string
   currentWaterUnit: string
-  pricePerUnit: string
   unitsConsumed: string
+  pricePerUnit: string
   waterBill: string
+  arrearsCarriedForward: string | null
   weeklyEntries: PaymentWeeklyEntry[]
 }

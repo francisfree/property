@@ -3,10 +3,10 @@ package com.castle.property.service;
 import com.castle.property.application.config.exception.ApplicationOperationException;
 import com.castle.property.dto.RentalPaymentResponse;
 import com.castle.property.entity.RentalPayment;
-import com.castle.property.entity.PaymentWeeklyEntry;
+import com.castle.property.entity.RentalPaymentWeekly;
 import com.castle.property.mapper.RentalPaymentMapper;
 import com.castle.property.repository.RentalPaymentRepository;
-import com.castle.property.repository.PaymentWeeklyEntryRepository;
+import com.castle.property.repository.RentalPaymentWeeklyRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -43,18 +43,18 @@ public class PaymentServiceImpl implements PaymentService {
     private EntityManager entityManager;
 
     private final RentalPaymentRepository rentalPaymentRepository;
-    private final PaymentWeeklyEntryRepository paymentWeeklyEntryRepository;
+    private final RentalPaymentWeeklyRepository rentalPaymentWeeklyRepository;
 
     private boolean validateHeaderRow(Row row, DataFormatter dataFormatter) {
-        boolean noColumn = dataFormatter.formatCellValue(row.getCell(0)).trim().equalsIgnoreCase("No");
-        boolean nameColumn = dataFormatter.formatCellValue(row.getCell(1)).trim().equalsIgnoreCase("Name");
+        boolean noColumn = dataFormatter.formatCellValue(row.getCell(0)).trim().toUpperCase().contains("NO");
+        boolean nameColumn = dataFormatter.formatCellValue(row.getCell(1)).trim().toUpperCase().contains("NAME");
         //header column names not standardize
 
         return noColumn && nameColumn;
     }
 
     private Map<Integer, String> extractWeeklyEntries(Row row, DataFormatter dataFormatter) {
-        DateTimeFormatter dateTimeFormatter1 = DateTimeFormatter.ofPattern("M-d-yy");
+        DateTimeFormatter dateTimeFormatter1 = DateTimeFormatter.ofPattern("d-M-yy");
         DateTimeFormatter dateTimeFormatter2 = DateTimeFormatter.ofPattern("d/M/yy");
         DateTimeFormatter cleanDateTimeFormatter = DateTimeFormatter.ofPattern("dd-MMM-yy");
 
@@ -121,7 +121,8 @@ public class PaymentServiceImpl implements PaymentService {
             DataFormatter dataFormatter = new DataFormatter();
             FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
 
-            Map<Integer, String> weeklyEntries = extractWeeklyEntries(sheet.getRow(0), dataFormatter);
+            Row headerColumn = sheet.getRow(1);
+            Map<Integer, String> weeklyEntries = extractWeeklyEntries(headerColumn, dataFormatter);
             if (weeklyEntries.isEmpty()) {
                 throw new ApplicationOperationException("payment.weekly.entries.not.found");
             }
@@ -131,8 +132,7 @@ public class PaymentServiceImpl implements PaymentService {
 
             List<RentalPayment> monthlyList = new ArrayList<>();
 
-
-            for (int rowIndex = 0; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+            for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
                 //validate row is a header
                 int columnIndex = 0;
                 Row row = sheet.getRow(rowIndex);
@@ -142,49 +142,55 @@ public class PaymentServiceImpl implements PaymentService {
                     rentalPayment.setHouseNumber(dataFormatter.formatCellValue(row.getCell(columnIndex), evaluator).trim());
                     rentalPayment.setOccupantName(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
                     rentalPayment.setOccupantPhoneNumber(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
-                    rentalPayment.setRentCurrentMonth(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
-                    rentalPayment.setRentPreviousMonth(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setRent(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setGarbage(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setTotalRentPaidPreviousMonth(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
                     rentalPayment.setArrearsBroughtForward(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setTotalRentDue(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
 
                     if (rentalPayment.getHouseNumber().isBlank() &&
                             rentalPayment.getOccupantName().isBlank() &&
                             rentalPayment.getOccupantPhoneNumber().isBlank() &&
-                            rentalPayment.getRentCurrentMonth().isBlank() &&
-                            rentalPayment.getRentPreviousMonth().isBlank()) {
+                            rentalPayment.getRent().isBlank() &&
+                            rentalPayment.getTotalRentPaidPreviousMonth().isBlank() &&
+                            rentalPayment.getArrearsBroughtForward().isBlank() &&
+                            rentalPayment.getTotalRentDue().isBlank()) {
                         break;
                     }
 
                     if (++columnIndex == weeklyEntryStartIndexColumn) {
                         columnIndex = weeklyEntryLastIndexColumn;
                     }
-                    rentalPayment.setTotalPayment(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setTotalRentPaid(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
                     rentalPayment.setPreviousWaterUnit(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
                     rentalPayment.setCurrentWaterUnit(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
                     rentalPayment.setPricePerUnit(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
                     rentalPayment.setUnitsConsumed(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
                     rentalPayment.setWaterBill(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
+                    rentalPayment.setArrearsCarriedForward(dataFormatter.formatCellValue(row.getCell(++columnIndex), evaluator).trim());
 
                     //extract weeklyEntries
                     int weeklyRowIndex = rowIndex;
                     AtomicInteger weekCount = new AtomicInteger();
                     weeklyEntries.forEach((weeklyColumIndex, weekName) -> {
                         Row weeklyRow1 = sheet.getRow(weeklyRowIndex);
-                        Row weeklyRow2 = sheet.getRow(weeklyRowIndex + 1);
-                        Row weeklyRow3 = sheet.getRow(weeklyRowIndex + 2);
+//                        Row weeklyRow2 = sheet.getRow(weeklyRowIndex + 1);
+//                        Row weeklyRow3 = sheet.getRow(weeklyRowIndex + 2);
 
-                        PaymentWeeklyEntry paymentWeeklyEntry = new PaymentWeeklyEntry();
-                        paymentWeeklyEntry.setRentalPayment(rentalPayment);
-                        paymentWeeklyEntry.setWeekName(weekName);
-                        paymentWeeklyEntry.setWeekCount(weekCount.incrementAndGet());
-                        paymentWeeklyEntry.setCash(extractValueAmount(weeklyColumIndex, dataFormatter, weeklyRow1, evaluator));
-                        paymentWeeklyEntry.setTill(extractValueAmount(weeklyColumIndex, dataFormatter, weeklyRow2, evaluator));
-                        paymentWeeklyEntry.setMpesa(extractValueAmount(weeklyColumIndex, dataFormatter, weeklyRow3, evaluator));
+                        RentalPaymentWeekly rentalPaymentWeekly = new RentalPaymentWeekly();
+                        rentalPaymentWeekly.setRentalPayment(rentalPayment);
+                        rentalPaymentWeekly.setWeekName(weekName);
+                        rentalPaymentWeekly.setWeekCount(weekCount.incrementAndGet());
+                        rentalPaymentWeekly.setTotalAmount(dataFormatter.formatCellValue(weeklyRow1.getCell(weeklyColumIndex), evaluator).trim());
+//                        rentalPaymentWeekly.setCash(extractValueAmount(weeklyColumIndex, dataFormatter, weeklyRow1, evaluator));
+//                        rentalPaymentWeekly.setTill(extractValueAmount(weeklyColumIndex, dataFormatter, weeklyRow2, evaluator));
+//                        rentalPaymentWeekly.setMpesa(extractValueAmount(weeklyColumIndex, dataFormatter, weeklyRow3, evaluator));
 
-                        rentalPayment.getWeeklyEntries().add(paymentWeeklyEntry);
+                        rentalPayment.getWeeklyEntries().add(rentalPaymentWeekly);
                     });
 
                     monthlyList.add(rentalPayment);
-                    rowIndex += 2;
+//                    rowIndex += 2;
                 }
             }
 

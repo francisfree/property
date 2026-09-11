@@ -13,6 +13,7 @@ public record PaymentWeeklyEntryResponse(
         String weekName,
         String cash,
         String till,
-        String mpesa
+        String mpesa,
+        String totalPaid
 ) {
 }
